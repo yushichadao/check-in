@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="campus">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>账号重启用 · 流程预览</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+    .page { max-width: 1080px; margin: 0 auto; padding: 28px 18px 60px; }
+    .page > h1 { font-size: 22px; margin: 0 0 4px; }
+    .page > .lead { color: var(--muted); margin: 0 0 22px; font-size: 14px; line-height: 1.7; }
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 820px) { .demo-grid { grid-template-columns: 1fr; } }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 6px 22px rgba(20,40,80,.08); }
+    .panel-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .panel-head h2 { font-size: 15px; margin: 0; }
+    .panel-head .tag { font-size: 12px; color: var(--muted); }
+    .panel-note { padding: 10px 16px; font-size: 12.5px; line-height: 1.6; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+    .panel-body { padding: 16px; }
+
+    /* 模拟登录页舞台（已注销账号尝试登录后被拦截、展示重启用表单） */
+    .login-stage { background: var(--surface-2); padding: 18px 0; }
+    .login-stage .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; max-width: 360px; margin: 0 auto; box-shadow: 0 6px 22px rgba(20,40,80,.08); }
+    .login-stage .form-card h2 { margin: 0 0 14px; font-size: 18px; }
+    .login-stage .field { margin-bottom: 12px; }
+    .login-stage .field label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--muted); }
+    .login-stage .field input,
+    .login-stage .field textarea,
+    .login-stage .field select { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; background: var(--surface); color: var(--text); }
+    .login-stage .field input[disabled] { background: var(--surface-2); color: var(--muted); }
+
+    /* 审批人工单卡片 */
+    .wo { border: 1px solid var(--border); border-radius: 14px; padding: 16px; background: var(--surface); }
+    .wo + .wo { margin-top: 12px; }
+    .wo .wo-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+    .wo .wo-head b { font-size: 14px; }
+    .wo .kv { display: grid; grid-template-columns: 72px 1fr; gap: 4px 10px; font-size: 13px; margin: 8px 0; }
+    .wo .kv span { color: var(--muted); }
+    .wo .reason { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.6; margin: 8px 0 12px; }
+
+    /* 轻量 toast */
+    #toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px); background: #1f2937; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 13.5px; opacity: 0; transition: .25s; pointer-events: none; z-index: 9999; max-width: 86vw; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+<script src="js/brand.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <h1>账号重启用 · 流程预览</h1>
+    <p class="lead">
+      账号<strong>注销</strong>后仅被隐藏（<code>disabled = 1</code>），服务器仍保留历史信息。此时若尝试登录，服务端返回
+      <code>403 cancelled</code>，登录页自动展示「重启用」工单申请表单（左侧）。提交后生成一条 <code>REACTIVATE</code> 工单，
+      派发给可管理的上级管理员 / 运维者审批（右侧）。<strong>审批通过</strong>后账号密码被清空、回到未激活态，本人需重新设置密码才能登录。
+    </p>
+
+    <div class="demo-grid">
+      <!-- ① 申请人：已注销账号登录页被拦截后展示的表单 -->
+      <section class="panel">
+        <div class="panel-head"><h2>① 申请人 · 登录页重启用表单</h2><span class="tag">注销账号尝试登录 → 被拦截</span></div>
+        <div class="panel-note">
+          以下表单与 <code>login.js</code> 的 <code>showReactivateForm</code> 完全一致。可通过 URL 参数预填：
+          <code>?n=姓名&amp;i=身份&amp;s=学号</code>。点击提交会真实调用
+          <code>POST /api/auth/reactivate-request</code>。
+        </div>
+        <div class="login-stage">
+          <div class="form-card">
+            <h2>重启用账号</h2>
+            <div class="alert warn">该账号已注销。可提交「重启用」工单，由上一级管理员审批后重新启用（密码将被清空，需本人重新设置）。</div>
+            <div class="field"><label>姓名</label><input id="rName" placeholder="请输入姓名"></div>
+            <div class="field"><label>身份</label>
+              <select id="rIdentity">
+                <option value="普通学生">普通学生</option>
+                <option value="班委">班委</option>
+                <option value="管理员">管理员</option>
+              </select>
+            </div>
+            <div class="field"><label>学号</label><input id="rSid" placeholder="普通学生请填写学号"></div>
+            <div class="field"><label>申请理由</label><textarea id="rReason" placeholder="请说明为何需要重新启用该账号" rows="3"></textarea></div>
+            <button class="btn primary block" id="rSubmit">提交重启用工单</button>
+            <button class="btn block" id="rBack" style="margin-top:8px">返回登录</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ② 审批人：上级管理员的 REACTIVATE 工单 -->
+      <section class="panel">
+        <div class="panel-head"><h2>② 审批人 · 上级管理员工单</h2><span class="tag">REACTIVATE · 待审批</span></div>
+        <div class="panel-note">
+          工单仅对<strong>层级更高、且在岗、持「工单审批」权限</strong>的上级可见（运维者通配）。下方为示例工单，
+          通过 / 驳回按钮在此为演示（真实审批需在管理端登录后操作）。
+        </div>
+        <div class="panel-body">
+          <div class="wo">
+            <div class="wo-head"><b>张三 · 普通学生</b><span class="tag">待审批</span></div>
+            <div class="kv">
+              <span>学号</span><div>20260501</div>
+              <span>申请内容</span><div>账号重启用</div>
+              <span>派发给</span><div>李四（班委）/ 运维者</div>
+            </div>
+            <div class="reason">因误点注销，课程签到仍需使用本账号，申请恢复并重新设置密码。</div>
+            <div class="row end" style="gap:8px">
+              <button class="btn ok" data-act="approve">通过</button>
+              <button class="btn danger" data-act="reject">驳回</button>
+            </div>
+            <div id="woResult" class="muted" style="font-size:12.5px;margin-top:10px"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // —— 轻量 toast（与线上 toastErr 文案风格一致） ——
+    let toastTimer = null;
+    function toast(msg, kind) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = kind === 'ok' ? 'var(--ok)' : (kind === 'err' ? 'var(--danger)' : '#1f2937');
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    // —— ① 申请人表单：预填 + 真实提交 ——
+    (function prefill() {
+      const p = new URLSearchParams(location.search);
+      const n = p.get('n'), i = p.get('i'), s = p.get('s');
+      if (n) document.getElementById('rName').value = n;
+      if (i) { const sel = document.getElementById('rIdentity'); if ([...sel.options].some(o => o.value === i)) sel.value = i; }
+      if (s) document.getElementById('rSid').value = s;
+    })();
+
+    document.getElementById('rBack').addEventListener('click', () => { toast('（演示）返回登录页'); });
+
+    document.getElementById('rSubmit').addEventListener('click', async () => {
+      const name = document.getElementById('rName').value.trim();
+      const identity = document.getElementById('rIdentity').value;
+      const sid = document.getElementById('rSid').value.trim();
+      const reason = document.getElementById('rReason').value.trim();
+      if (!name) return toast('请输入姓名', 'err');
+      if (identity === '普通学生' && !sid) return toast('普通学生请填写学号', 'err');
+      if (!reason) return toast('请填写申请理由', 'err');
+      const btn = document.getElementById('rSubmit');
+      btn.disabled = true;
+      try {
+        const r = await fetch('api/auth/reactivate-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ real_name: name, student_id: sid, identity, reason })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok) throw new Error(data.error || ('提交失败（HTTP ' + r.status + '）'));
+        toast(data.message || '重启用工单已提交', 'ok');
+      } catch (e) {
+        toast(e.message, 'err');
+        btn.disabled = false;
+      }
+    });
+
+    // —— ② 审批人：演示通过 / 驳回的结果说明 ——
+    document.querySelectorAll('.wo [data-act]').forEach(b => {
+      b.addEventListener('click', () => {
+        const act = b.getAttribute('data-act');
+        const box = document.getElementById('woResult');
+        if (act === 'approve') {
+          box.innerHTML = '✅ 审批通过：<code>UPDATE users SET disabled=0, status=\'active\', password_hash=NULL, must_change_pwd=1</code>' +
+            ' → 账号密码被清空、回到未激活态，本人需重新设置密码后才能登录；并结束其全部会话、重算自动代管。';
+          toast('（演示）已通过重启用工单', 'ok');
+        } else {
+          box.textContent = '⛔ 已驳回：账号保持 disabled=1（已注销）状态，本人仍需重新提交申请。';
+          toast('（演示）已驳回重启用工单', 'err');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
