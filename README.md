@@ -10,7 +10,7 @@
 > **当前出厂状态**：账号名单已预置（未激活，无密码、无邮箱），业务数据为空。
 > 全员需到 `/register.html` 完成邮箱验证并设置密码，登录后**必须先完成首次设置**才能进入系统。
 
-> **配套资料**：官网宣传页（`site/`，纯静态，可独立部署）、三册图文说明书（用户端 / 管理端 / 运维端，含封面与页码）、全流程分支图（`docs/flowchart.html`）。
+> **配套资料**：官网宣传页（纯静态单页站点，可独立部署到任意静态托管）、三册图文说明书（用户端 / 管理端 / 运维端，含封面与页码）。
 
 ---
 
@@ -39,7 +39,7 @@
 21. [自动代管（缺上级自动补位）](#二十一自动代管缺上级自动补位)
 22. [使用说明书（PDF）](#二十二使用说明书pdf)
 23. [全流程全分支图（网页）](#二十三全流程全分支图网页)
-24. [官网宣传页（site/）与配图 / 说明书构建](#二十四官网宣传页site与配图--说明书构建)
+24. [官网宣传页（下载站）与配图 / 说明书构建](#二十四官网宣传页下载站与配图--说明书构建)
 
 ---
 
@@ -81,7 +81,7 @@
 >    输入后请验证：ls <项目目录>/package.json <项目目录>/server/index.js，两个文件均存在即为正确目录。
 
 环境要求：**Node.js 20 及以上**（推荐 LTS 20 / 22），支持 **Linux** 和 **Windows**。
-`better-sqlite3` 为原生 C++ 模块，切换平台或 Node 大版本后需重新编译——启动时会自动尝试 `npm rebuild`，也可手动执行 `npm ci`。macOS 不受支持（原生模块无预编译产物）。
+`better-sqlite3` 为原生 C++ 模块，切换平台或 Node 大版本后需重新编译——启动时会自动尝试 `npm rebuild`，也可手动执行 `npm ci`。macOS 无对应预编译产物，需本地 `npm ci` 重新拉取对应平台预编译（否则 `better-sqlite3` 无法加载）。
 
 
 ### 1. 本机运行
@@ -141,7 +141,7 @@ npm start                       # 或 pm2 start server/index.js --name check-in
 | `NODE_ENV` | `production` | 运行环境 |
 | `BASE_PATH` | `/check-in` | 部署子路径。**部署在域名根目录请设为空**（`BASE_PATH=`） |
 | `TRUST_PROXY` | `1` | 位于 Nginx/Caddy 之后填 `1`；**直接对公网暴露 IP 必须填 `0`**（否则可伪造 X-Forwarded-For 绕过 IP 限流） |
-| `COOKIE_SECURE` | `false` | 启用 HTTPS 后建议改 `true`；仍以 `http://IP:端口` 访问时必须 `false`，否则登录失效 |
+| `COOKIE_SECURE` | `true` | 仅在请求为 TLS（`req.secure`）时才真正给 Cookie 加 `Secure` 标记；以纯 `http://IP:端口` 直连（未启用 HTTPS）时须设 `false`，否则登录失效 |
 | `TOKEN_TTL` | `2h` | 会话令牌有效期 |
 | `WO_TIMEOUT_HOURS` | `48` | 权限工单超时自动驳回（小时） |
 | `DB_DIR` | 空（解析为 `./data`） | 数据库与密钥文件目录（可指向加密卷） |
@@ -510,8 +510,8 @@ check-in/
 │  ├─ config.js         内置默认配置 + 可选 .env 覆盖 + 密钥管理 + 权限码表
 │  ├─ db.js             SQLite 建表与迁移（含 data_flow 等表）
 │  ├─ deps-check.js     启动期依赖自检 + 自动修复（better-sqlite3）
-│  ├─ seed.js           初始数据（运维者账号；仅全新空库写入默认活动范围）；--reset 清空业务表
-│  ├─ seed-prod.js      生产环境种子（批量预置账号等）
+│  ├─ seed.js           初始数据（运维者账号；默认不预置活动范围）；--reset 清空业务表
+│  ├─ secret.js         密钥与授权码加解密（SMTP 授权码、SECRET_KEY 等）
 │  ├─ factory-reset.js  恢复出厂设置（保留账号与 SMTP，清空业务数据 / 数据流 / 附件）
 │  ├─ auth.js           鉴权、角色 / 权限网关、Scope、登录节流
 │  ├─ sessions.js       会话与设备（单端登录、维护挂起 / 恢复）
@@ -547,7 +547,7 @@ check-in/
 │                       login  register  forgot  privacy  setup  ops  manager  user  fence
 │                       dataflow  account-info  about  no-autofill
 ├─ tools/               reset-ops-password.js  build-pdf.cjs  cleanup-anomalies.js  …（运维脚本）
-├─ manual-user.html     用户版说明书（HTML 源，配图取自 screens/）
+├─ manual-user.html     用户版说明书（HTML 源，配图取自 manual-shots/）
 ├─ manual-admin.html    管理员 / 运维者版说明书（HTML 源）
 ├─ .env.example         可选配置示例（复制为 .env 后生效）
 ├─ start.bat            Windows 一键启动
@@ -699,7 +699,7 @@ server {
 ### 5. 部署后自检
 
 1. 访问 `https://域名/check-in/` → 应跳转登录页；
-2. 打开 `/register.html`，按「姓名 `余子晨` + 身份 `运维者`」获取邮箱验证码、设置密码后登录 `/ops.html` → **立即修改密码**；
+2. 打开 `/register.html`，按「姓名 `运维者` + 身份 `运维者`」获取邮箱验证码、设置密码后登录 `/ops.html` → **立即修改密码**；
 3. 登录后应先停在「首次设置」页，完成通知偏好后再进入系统；
 4. 创建一个管理账号并登录 → 验证权限与「管理范围」是否正常；
 5. 需要邮件时，发一封测试邮件确认 SMTP 可用（`npm run mail:preview` / `npm run mail:send`）。
@@ -800,7 +800,7 @@ server {
 | `npm run dev` | 开发模式（文件变更自动重启） |
 | `npm run verify:deps` | 单独跑依赖自检 + 自动修复（与启动时同一套逻辑） |
 | `npm run seed` | 补齐初始数据（不覆盖已有数据） |
-| `npm run shots` | 无头浏览器抓取三端真实界面截图（自动写入完整演示数据、整页截图并等待加载完成），输出到 `manual-shots/` 并同步 `site/assets/` |
+| `npm run shots` | 无头浏览器抓取三端真实界面截图（自动写入完整演示数据、整页截图并等待加载完成），输出到 `manual-shots/` |
 | `npm run build:pdf` | 由三册说明书 HTML 生成带封面 / 页码 / 独立封底的 PDF（`manual-*.pdf`） |
 
 | `npm run reset` | **重置数据库**（动态清空所有业务表，保留 `settings`，重建初始数据） |
@@ -811,7 +811,7 @@ server {
 | `npm run mail:preview` | 生成所有类型邮件的预览文件（`data/mail-preview/index.html`） |
 | `npm run mail:send` | 把所有类型邮件真实发送到测试邮箱（可用 `MAIL_TEST_TO` 覆盖） |
 | `npm run config` | **终端配置向导（TUI）**：交互式配置班级名 / 端口 / 子路径 / SMTP / HTTPS 等，支持 nginx -T 反代自动配置、URL 预览、SMTP 预检、服务自动启动/重启 |
-| `npm run init` | 重建初始数据（首次启动自动执行，也可手动触发） |
+| `npm run init` | **一键初始化（空白部署态）**：清空全部业务数据与账号，仅重建运维者账号（无密码），恢复出厂系统设置，清理 uploads/mail-outbox/mail-preview，保留 `.env`；执行前需键入「初始化」并校验运维者密码，且自动备份 |
 
 ---
 
@@ -916,7 +916,7 @@ pm2 restart check-in
 > 前者针对「辅导员存在但未激活」，受托人是范围内层级最高者；自动代管针对「整层无人在岗」，受托人是在岗班委。
 > 两者由自动代管统一编排并去重，不会把同一权限授给两个人。
 
-详细设计与运维排查（附核对 SQL 与常见问答）见 [`docs/AUTO_COVER_DESIGN.md`](docs/AUTO_COVER_DESIGN.md)。
+详细设计与运维排查见本页面上方规则表；相关实现位于 `server/autocover.js`，自动代管总开关在运维端「系统安全」。
 
 ### 到岗确认（继承前任 / 代管期间的班级级设置）
 
@@ -944,7 +944,7 @@ pm2 restart check-in
 - 重新生成 PDF（需 playwright 与 pdf-lib）：
 
 ```bash
-npm run shots        # 可选：先重拍界面配图到 manual-shots/ 并同步 site/assets/
+npm run shots        # 可选：先重拍界面配图到 manual-shots/
 npm run build:pdf    # 生成 manual-user.pdf / manual-admin.pdf / manual-ops.pdf
 ```
 
@@ -955,7 +955,7 @@ npm run build:pdf    # 生成 manual-user.pdf / manual-admin.pdf / manual-ops.pd
 
 ## 二十三、全流程全分支图（网页）
 
-`docs/flowchart.html`：把系统里**所有情况**画成流程图，直接用浏览器打开即可（纯静态单文件，不依赖外网 CDN，不经过服务端）。
+`docs/flowchart.html`：把系统里**所有情况**画成流程图的参考文档（**此文件未随源码仓库发布，如需请另行获取**；纯静态单文件，不依赖外网 CDN，不经过服务端）。
 
 - **25 张流程图**：启动自检、请求网关、注册激活、登录、账号生命周期、密码重置、权限判定、自动代管、未激活委托、权限工单、向下授权、签到主流程、活动范围判定、状态折算、请假两审、补签两审、管理员代操作、活动发布与删除、范围管理、通知投递、定时任务、维护模式、高危二次确认、数据流撤回、数据流审计。
 - **5 张字典表**：签到状态与展示态、全库枚举字段、角色与权限码矩阵、异常与边界速查（场景 → 行为 → 状态码）、系统设置开关。
@@ -965,22 +965,24 @@ npm run build:pdf    # 生成 manual-user.pdf / manual-admin.pdf / manual-ops.pd
 
 ---
 
-## 二十四、官网宣传页（site/）与配图 / 说明书构建
+## 二十四、官网宣传页（下载站）与配图 / 说明书构建
 
-`site/` 为纯静态官网宣传页，可独立部署（与主服务同域的子目录，或用任意静态托管）。
+官网宣传页是一套**纯静态单页站点**（落地页 + 统一下载中心），可独立部署到任意静态托管（与主服务同域的子目录，或独立静态空间）。它由以下文件构成：
 
-- `site/index.html`：单页官网（深色主题，全幅布局）。含**阅读进度条**、核心功能 / 可选功能 / 三端介绍 / 界面预览 / 安全与隐私 / 部署指南 / 在线配置演示 / **统一下载中心** / 开源协议等版块；「下载中心」一处收敛为「一个部署包 + 按角色的三册说明书」，可按需分别下载。
-- `site/assets/`：官网配图（由 `npm run shots` 自动同步真实界面截图）。
-- `site/download/`：官网提供的下载文件（部署包 `班级签到系统.zip` 与三册说明书 PDF）。
+- `index.html`：单页官网（深色主题，全幅布局）。含阅读进度条、核心功能 / 可选功能 / 三端介绍 / 界面预览 / 安全与隐私 / 部署指南 / 在线配置演示 / **统一下载中心** / 开源协议等版块；「下载中心」收敛为 **6 个发布文件**：源码包、部署包、服务端包、三端页面包、操作手册包、README（独立下载）。
+- `assets/`：官网配图（界面截图）。
+- `images/`：备案图标等静态资源。
+- `download/`：官网提供的下载文件（6 个发布包）。
 - `tui-demo.js`：官网内嵌的终端配置向导演示（仅演示，不读写任何文件）。
 
-维护流程：
+> 这套官网静态站**不在应用运行目录内**，而是作为独立发布物随 Release 提供（与可运行的部署包分开）。
+
+配图与说明书构建：
 
 ```bash
-npm run shots        # 抓取三端真实界面配图（写入 manual-shots/，并同步 site/assets/）
-npm run build:pdf    # 重新生成三册说明书 PDF
-# 将手册与部署包放入 site/download/ 后，官网下载中心即可用
+npm run shots        # 抓取三端真实界面配图，写入 manual-shots/
+npm run build:pdf    # 由三册说明书 HTML 生成带封面 / 页码 / 封底的 PDF（manual-*.pdf）
 ```
 
-> 官网与说明书共用同一套界面配图。`npm run shots` 会先启动服务、写入**完整演示数据**（活动 / 签到 / 请假 / 补签 / 审核 / 消息 / 工单 / 数据流），
+> 说明书与官网共用同一套界面配图。`npm run shots` 会先启动服务、写入**完整演示数据**（活动 / 签到 / 请假 / 补签 / 审核 / 消息 / 工单 / 数据流），
 > 再以演示账号登录三端、逐项切换菜单并**整页截图**（等待数据加载完成、避免「加载中」等异常态），跑完后自动清理演示数据。
