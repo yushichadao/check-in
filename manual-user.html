@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户端使用说明书 · 班级签到系统</title>
+<style>
+  :root { --brand:#1A4FA8; --brand-d:#163E85; --ink:#1F2329; --sub:#5B6168; --line:#C9DDF5; --bg:#F5F6F8; }
+  * { box-sizing: border-box; }
+
+  /* 分页：内容自然流动（不强制每节换页，避免大段空白）。
+     页码只由 tools/build-pdf.cjs 的页脚模板输出；此处不再声明 @bottom-center，
+     否则 Chromium 的 @page 边距框会与它叠在同一位置（两行页码重叠）。 */
+  @page { size: A4; margin: 15mm 15mm 18mm 15mm; }
+  @page :first { margin: 0; }   /* 封面整幅铺满 */
+
+  body { margin:0; font-family: "Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif; color:var(--ink); background:#fff; line-height:1.75; font-size:10.5pt; }
+  h1 { font-size: 22pt; margin: 0 0 6px; color: var(--brand-d); }
+  h2 { font-size: 15pt; color: var(--brand-d); border-bottom: 3px solid var(--brand); padding-bottom: 5px; margin: 20px 0 12px; break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+  h3 { font-size: 12pt; color: var(--brand-d); margin: 14px 0 6px; break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+  /* 排版约束（三册一致）：
+     ① 标题禁止落在页尾 —— 标题与其后第一个块绑定，放不下就整体下移；
+     ② 结尾禁止落在页首 —— 段落/列表尽量不脱离前文从新页顶部开始；
+     ③ 段首/段尾至少留 2 行，避免孤字行。 */
+  h2 + *, h3 + * { break-before: avoid; page-break-before: avoid; }
+  ul, ol { break-before: avoid; page-break-before: avoid; }
+  p, li { orphans: 2; widows: 2; }
+  p { margin: 7px 0; }
+  ul, ol { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; page-break-inside: avoid; break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #EAF1FB; color: var(--brand-d); }
+  code { background:#EEF2F8; color:#163E85; padding:1px 4px; border-radius:3px; font-size:9.5pt; font-family: Consolas, Menlo, monospace; }
+  .note { background:#EAF1FB; border-left:4px solid var(--brand); padding:8px 12px; color:#163E85; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+  .warn { background:#FDEFE6; border-left:4px solid #F59E0B; padding:8px 12px; color:#8a4b1b; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+  .tip  { background:#EAF9F3; border-left:4px solid #16A34A; padding:8px 12px; color:#12603a; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+
+  /* 截图：整图整体缩放至一页内，绝不跨页裁切、不被遮挡 */
+  .shot { margin:10px 0; break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; }
+  .shot img { display:block; width:auto; height:auto; max-width:100%; max-height:165mm; margin:0 auto; break-inside: avoid; break-after: avoid; page-break-after: avoid; }
+  .shot .cap { font-size:9pt; color:var(--sub); padding:6px 10px; border-top:1px solid var(--line); background:#FAFBFC; text-align:center; break-before: avoid; page-break-before: avoid; }
+  .shot.two { display:grid; grid-template-columns:1fr 1fr; gap:10px; border:none; overflow:visible; break-inside: avoid; page-break-inside: avoid; }
+  .shot.two figure { margin:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; break-inside: avoid; page-break-inside: avoid; }
+  .shot.two .cap { border-top:1px solid var(--line); }
+
+  /* 封面 */
+  .cover { width:100%; height:297mm; box-sizing:border-box; background:linear-gradient(165deg,#0E2747 0%,#163E85 100%); color:#fff; page-break-after:always; break-after: page; display:flex; flex-direction:column; padding:26mm 22mm 22mm; }
+  .cover .wordmark { font-size:12pt; letter-spacing:6px; opacity:0.78; }
+  .cover .mid { margin:auto 0; }
+  .cover h1 { font-size:34pt; font-weight:800; letter-spacing:2px; margin:0; line-height:1.14; color:#fff; }
+  .cover .sub { margin-top:10mm; font-size:13pt; opacity:0.9; letter-spacing:1px; }
+  .cover .rule { width:64px; height:4px; background:#5B9BFF; border-radius:2px; margin:8mm 0; }
+  .cover .foot { padding-top:10mm; border-top:1px solid rgba(255,255,255,0.22); display:flex; justify-content:space-between; align-items:baseline; font-size:10pt; opacity:0.82; letter-spacing:0.5px; }
+
+  /* 封底（独立成页） */
+  .backcover { width:100%; height:297mm; box-sizing:border-box; page-break-before:always; break-before: page; background:linear-gradient(165deg,#0E2747 0%,#163E85 100%); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:30mm 24mm; }
+  .backcover .bc-logo { width:54px; height:54px; border-radius:15px; background:rgba(255,255,255,.16); display:grid; place-items:center; font-size:22px; font-weight:800; margin-bottom:14px; }
+  .backcover .bc-name { font-size:20pt; font-weight:800; letter-spacing:2px; }
+  .backcover .bc-slogan { margin-top:6mm; font-size:11.5pt; opacity:.88; line-height:2; }
+  .backcover .bc-line { margin-top:16mm; padding-top:8mm; border-top:1px solid rgba(255,255,255,.24); font-size:9.5pt; opacity:.8; line-height:1.95; }
+  /* 正文末尾不再放版权行：它与页脚页码重复，且会在正文最后一页单独占位（结尾落到页首）。 */
+  a { color: var(--brand); }
+</style>
+</head>
+<body>
+  <!-- ===== 封面 ===== -->
+  <section class="cover">
+    <div class="wordmark">班级签到系统</div>
+    <div class="mid">
+      <h1>用户端<br>使用说明书</h1>
+      <div class="rule"></div>
+      <div class="sub">面向学生 / 普通成员：查看活动 · 签到 · 请假 · 申诉</div>
+    </div>
+    <div class="foot"><span>作者：余子晨（Yushichadao）</span><span>v{{VERSION}} · {{DATE}}</span></div>
+  </section>
+
+  <h2>1. 注册、激活与登录</h2>
+  <p>首次使用需先在注册页激活账号，之后方可登录。账号由管理员预置或自主注册后由邮箱验证码激活。</p>
+  <h3>1.1 注册 / 激活</h3>
+  <ol>
+    <li>打开注册页，填写<b>姓名</b>、<b>学号</b>、<b>身份</b>（普通学生）与<b>登记邮箱</b>；</li>
+    <li>点击「发送验证码」，到邮箱收取 6 位验证码并填入；</li>
+    <li>设置登录密码（至少 6 位，需同时含字母与数字），提交即完成激活。</li>
+  </ol>
+  <div class="shot"><img src="manual-shots/register.png" alt="注册/激活页" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 1-1　注册 / 激活页（姓名 · 学号 · 身份 · 邮箱 · 验证码 · 密码）</div></div>
+
+  <h3>1.2 登录</h3>
+  <p>使用「姓名 + 身份 + 学号 + 密码」登录。同一账号最多允许<b>一台手机 + 一台电脑</b>同时在线，超出时旧会话会被顶下线。</p>
+  <div class="shot"><img src="manual-shots/login.png" alt="登录页" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 1-2　登录页（账号 · 身份 · 学号 · 密码）</div></div>
+
+  <h3>1.3 首次设置与找回密码</h3>
+  <ul>
+    <li><b>首次设置</b>：新激活账号首次登录需完成通知偏好等首次设置，完成后进入主界面；</li>
+    <li><b>找回密码</b>：在登录页点「忘记密码」，用登记邮箱收取验证码自助重置；若邮箱已失效，可联系管理员通过工单重置。</li>
+  </ul>
+  <div class="shot"><img src="manual-shots/forgot.png" alt="忘记密码" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 1-3　忘记密码（邮箱验证码自助重置）</div></div>
+  <div class="note">邮箱仅用于接收验证码与系统通知，请使用本人可正常收信的邮箱，并可在「账号信息 → 账号安全 → 找回邮箱」中维护。</div>
+
+  <h2>2. 签到</h2>
+  <p>「签到」为默认首页。页面顶部「当前活动」展示最近一场活动的详细信息与你的状态；下方「我的状态」用于提交签到。</p>
+  <h3>2.1 当前活动</h3>
+  <p>活动卡展示名称、时间、<b>签到窗口</b>、签到规则、地点、活动范围与备注，并显示你的状态徽标（已签到 / 在途中 / 请假 / 缺勤）以及是否为「范围内」。</p>
+  <div class="shot"><img src="manual-shots/user-checkin.png" alt="签到" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 2-1　签到页（当前活动详情 + 我的状态 + 定位与提交）</div></div>
+
+  <h3>2.2 提交签到</h3>
+  <ul>
+    <li>在「我的状态」中选择 <b>签到 / 在途中 / 请假</b>，可选填地点，然后点「提交」；</li>
+    <li>签到时间窗口由<b>服务端</b>计算，客户端时间不可信；窗口未开或已关闭时无法提交；</li>
+    <li>若活动启用了<b>活动范围核验</b>，首次提交会询问是否授权上传定位，<b>不授权也可正常签到</b>；授权后系统比对是否在范围内，结果仅作参考，不阻断签到；</li>
+    <li>签到一旦提交<b>不能自行取消或修改</b>，如需更正请联系管理员。</li>
+  </ul>
+  <div class="tip">定位精度低于阈值（默认 200 米）时会被拒绝采集；系统<b>不做后台持续定位</b>，仅在签到时采集一次位置并随签到上传。</div>
+
+  <h2>3. 活动</h2>
+  <p>「活动」页列出你可见的全部活动，可查看名称、时间、地点、备注与配图，并了解该活动的签到要求（是否需要范围核验、签到窗口等）。</p>
+  <div class="shot"><img src="manual-shots/user-activities.png" alt="活动" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 3-1　活动列表 / 活动详情</div></div>
+
+  <h2>4. 日历报告</h2>
+  <p>「日历报告」以日历形式呈现你个人的每日考勤状态，并给出统计概览，便于自查出勤情况。</p>
+  <div class="shot"><img src="manual-shots/user-stats.png" alt="日历报告" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 4-1　个人签到日历报告</div></div>
+
+  <h2>5. 签到记录</h2>
+  <p>「签到记录」列出历史签到明细（活动、时间、状态、是否在范围内），可作为核对与申诉的依据。</p>
+  <div class="shot"><img src="manual-shots/user-records.png" alt="签到记录" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 5-1　签到记录明细</div></div>
+
+  <h2>6. 申诉与补签</h2>
+  <p>「申诉」页用于提交<b>请假 / 补签 / 退签</b>申请，以及对裁决结果提出<b>复议（申诉）</b>。裁决采用两级制：初审由本级管理员裁决，你对结果不满可申诉进入上级终审。</p>
+  <table>
+    <tr><th>类型</th><th>适用场景</th><th>说明</th></tr>
+    <tr><td>请假</td><td>活动未开始前</td><td>提前提交，附理由与（可选）材料，管理员审核后计入请假。</td></tr>
+    <tr><td>补签</td><td>活动结束且本人缺勤</td><td>需系统允许补签；提交后由管理员审核，通过即补记签到。</td></tr>
+    <tr><td>申诉 / 复议</td><td>裁决结果有异议</td><td>进入上级终审，裁决锁定后仍可申诉一次。</td></tr>
+  </table>
+  <div class="shot"><img src="manual-shots/user-appeal.png" alt="申诉" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 6-1　申诉 / 补签 / 退签申请</div></div>
+  <div class="warn">补签申请可由运维端关闭；关闭后仅保留请假流程。请如实填写，虚假材料将被驳回并留痕。</div>
+
+  <h2>7. 数据流</h2>
+  <p>「数据流」展示你本人的操作记录（登录、签到、申请、裁决等）与系统对本人的相关操作，便于追溯。敏感字段以打码形式展示。</p>
+  <div class="shot"><img src="manual-shots/user-dataflow.png" alt="数据流" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 7-1　个人操作数据流</div></div>
+
+  <h2>8. 消息中心</h2>
+  <p>接收站内信与系统通知，如活动创建、签到开始、缺勤提醒、裁决退回与工单回复等。工单回复与系统消息为<b>必提醒</b>，不可关闭。</p>
+  <div class="shot"><img src="manual-shots/user-msg.png" alt="消息中心" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 8-1　消息中心</div></div>
+
+  <h2>9. 账号信息与登录设备</h2>
+  <ul>
+    <li><b>账号信息</b>：查看基本信息，管理账号安全（修改密码 / 找回邮箱 / 注销）与通知偏好；</li>
+    <li><b>登录设备</b>：查看当前在线设备，可下线陌生设备以保障账号安全。</li>
+  </ul>
+  <div class="shot two">
+    <figure><img src="manual-shots/user-accountinfo.png" alt="账号信息" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 9-1　账号信息（安全 / 偏好）</div></figure>
+    <figure><img src="manual-shots/user-devices.png" alt="登录设备" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 9-2　登录设备管理</div></figure>
+  </div>
+
+  <h2>10. 通知与界面偏好</h2>
+  <p>「账号信息 → 通知偏好」中可对每类通知自选接收渠道：<b>站内 + 邮件 / 仅站内 / 不接收</b>；同时可开关「清爽模式」，该模式默认开启，仅影响本人界面，不隐藏任何功能。</p>
+  <div class="note">未配置 SMTP 时，所有通知改由站内消息投递，不影响送达；邮件验证码等环节依赖 SMTP。</div>
+
+  <h2>11. 关于与隐私</h2>
+  <p>「关于系统」可查看版本与 MIT 软件许可协议，并可通过「反馈网站问题」提交工单。隐私政策说明个人信息的收集与使用范围。</p>
+  <div class="shot two">
+    <figure><img src="manual-shots/user-about.png" alt="关于系统" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 11-1　关于系统（版本 / 许可 / 反馈）</div></figure>
+    <figure><img src="manual-shots/privacy.png" alt="隐私政策" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 11-2　隐私政策</div></figure>
+  </div>
+
+  <h2>12. 常见问题与温馨提示</h2>
+  <h3>12.1 常见问题</h3>
+  <ul>
+    <li><b>收不到验证码？</b> 检查邮箱是否填写正确、是否被归类到垃圾邮件；稍后重试或联系管理员。</li>
+    <li><b>无法签到？</b> 确认活动是否在签到窗口内、是否已提交过；窗口由服务端计算，请以页面提示为准。</li>
+    <li><b>签到不能改？</b> 签到提交后不可自行修改，如填错请联系管理员更正。</li>
+    <li><b>被顶下线？</b> 同一账号至多两台设备在线，超过时会顶下最早登录的设备。</li>
+    <li><b>定位没有权限？</b> 仅在活动启用范围核验且你选择授权时才会采集；不授权同样可以签到。</li>
+  </ul>
+  <h3>12.2 温馨提示</h3>
+  <ul>
+    <li>请使用本人邮箱与真实学号注册，避免影响考勤与通知；</li>
+    <li>如遇问题，请先在「消息中心」查看是否有相关通知，再通过「关于 → 反馈网站问题」提交工单。</li>
+  </ul>
+
+  <!-- 正文到此结束。版权信息统一放在封底，避免末页再出现一行重复版权、并多出一张只印这行的空白页。 -->
+
+  <!-- ===== 封底 ===== -->
+  <section class="backcover">
+    <div class="bc-logo">签</div>
+    <div class="bc-name">班级签到系统</div>
+    <div class="bc-slogan">开源 · 私有化部署 · 数据自持<br>用户端 · 管理端 · 运维端 三端协同</div>
+    <div class="bc-line">
+      本说明书适用于《班级签到系统》用户端 v{{VERSION}}。<br>
+      软件以 MIT 协议开源发布，可自由使用、二次开发与商用。<br>
+      获取部署包与其它分册：见项目 README 或官网下载页。<br>
+      Copyright © 2026 Yushichadao · 余子晨 版权所有
+    </div>
+  </section>
+</body>
+</html>
