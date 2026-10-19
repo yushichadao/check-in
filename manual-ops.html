@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运维端使用说明书 · 班级签到系统</title>
+<style>
+  :root { --brand:#1A4FA8; --brand-d:#163E85; --ink:#1F2329; --sub:#5B6168; --line:#C9DDF5; --bg:#F5F6F8; }
+  * { box-sizing: border-box; }
+
+  /* 分页：内容自然流动（不强制每节换页，避免大段空白）。
+     页码只由 tools/build-pdf.cjs 的页脚模板输出；此处不再声明 @bottom-center，
+     否则 Chromium 的 @page 边距框会与它叠在同一位置（两行页码重叠）。 */
+  @page { size: A4; margin: 15mm 15mm 18mm 15mm; }
+  @page :first { margin: 0; }   /* 封面整幅铺满 */
+
+  body { margin:0; font-family: "Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif; color:var(--ink); background:#fff; line-height:1.75; font-size:10.5pt; }
+  h1 { font-size: 22pt; margin: 0 0 6px; color: var(--brand-d); }
+  h2 { font-size: 15pt; color: var(--brand-d); border-bottom: 3px solid var(--brand); padding-bottom: 5px; margin: 20px 0 12px; break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+  h3 { font-size: 12pt; color: var(--brand-d); margin: 14px 0 6px; break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+  /* 排版约束（三册一致）：
+     ① 标题禁止落在页尾 —— 标题与其后第一个块绑定，放不下就整体下移；
+     ② 结尾禁止落在页首 —— 段落/列表尽量不脱离前文从新页顶部开始；
+     ③ 段首/段尾至少留 2 行，避免孤字行。 */
+  h2 + *, h3 + * { break-before: avoid; page-break-before: avoid; }
+  ul, ol { break-before: avoid; page-break-before: avoid; }
+  p, li { orphans: 2; widows: 2; }
+  p { margin: 7px 0; }
+  ul, ol { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; page-break-inside: avoid; break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #EAF1FB; color: var(--brand-d); }
+  code { background:#EEF2F8; color:#163E85; padding:1px 4px; border-radius:3px; font-size:9.5pt; font-family: Consolas, Menlo, monospace; }
+  pre { background:#0F1B33; color:#E6EDF7; padding:10px 12px; border-radius:6px; overflow:auto; font-size:9pt; line-height:1.6; page-break-inside: avoid; break-inside: avoid; }
+  .note { background:#EAF1FB; border-left:4px solid var(--brand); padding:8px 12px; color:#163E85; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+  .warn { background:#FDEFE6; border-left:4px solid #F59E0B; padding:8px 12px; color:#8a4b1b; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+  .tip  { background:#EAF9F3; border-left:4px solid #16A34A; padding:8px 12px; color:#12603a; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+
+  /* 截图：整图缩放，不跨页裁切；① 与上下文同页（break-before:avoid）避免图片单独成页；
+     ② 限高 165mm，给标题/段落留出同行空间，长截图也不会吃满整页。 */
+  .shot { margin:10px 0; break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; }
+  .shot img { display:block; width:auto; height:auto; max-width:100%; max-height:165mm; margin:0 auto; break-inside: avoid; break-after: avoid; page-break-after: avoid; }
+  .shot .cap { font-size:9pt; color:var(--sub); padding:6px 10px; border-top:1px solid var(--line); background:#FAFBFC; text-align:center; break-before: avoid; page-break-before: avoid; }
+  .shot.two { display:grid; grid-template-columns:1fr 1fr; gap:10px; border:none; overflow:visible; break-inside: avoid; page-break-inside: avoid; }
+  .shot.two figure { margin:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; break-inside: avoid; page-break-inside: avoid; }
+  .shot.two .cap { border-top:1px solid var(--line); }
+
+  .cover { width:100%; height:297mm; box-sizing:border-box; background:linear-gradient(165deg,#0E2747 0%,#163E85 100%); color:#fff; page-break-after:always; break-after: page; display:flex; flex-direction:column; padding:26mm 22mm 22mm; }
+  .cover .wordmark { font-size:12pt; letter-spacing:6px; opacity:0.78; }
+  .cover .mid { margin:auto 0; }
+  .cover h1 { font-size:34pt; font-weight:800; letter-spacing:2px; margin:0; line-height:1.14; color:#fff; }
+  .cover .sub { margin-top:10mm; font-size:13pt; opacity:0.9; letter-spacing:1px; }
+  .cover .rule { width:64px; height:4px; background:#5B9BFF; border-radius:2px; margin:8mm 0; }
+  .cover .foot { padding-top:10mm; border-top:1px solid rgba(255,255,255,0.22); display:flex; justify-content:space-between; align-items:baseline; font-size:10pt; opacity:0.82; letter-spacing:0.5px; }
+
+  .backcover { width:100%; height:297mm; box-sizing:border-box; page-break-before:always; break-before: page; background:linear-gradient(165deg,#0E2747 0%,#163E85 100%); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:30mm 24mm; }
+  .backcover .bc-logo { width:54px; height:54px; border-radius:15px; background:rgba(255,255,255,.16); display:grid; place-items:center; font-size:22px; font-weight:800; margin-bottom:14px; }
+  .backcover .bc-name { font-size:20pt; font-weight:800; letter-spacing:2px; }
+  .backcover .bc-slogan { margin-top:6mm; font-size:11.5pt; opacity:.88; line-height:2; }
+  .backcover .bc-line { margin-top:16mm; padding-top:8mm; border-top:1px solid rgba(255,255,255,.24); font-size:9.5pt; opacity:.8; line-height:1.95; }
+  /* 正文末尾不再放版权行：它与页脚页码重复，且会在正文最后一页单独占位（结尾落到页首）。 */
+  a { color: var(--brand); }
+</style>
+</head>
+<body>
+  <section class="cover">
+    <div class="wordmark">班级签到系统</div>
+    <div class="mid">
+      <h1>运维端<br>使用说明书</h1>
+      <div class="rule"></div>
+      <div class="sub">面向系统运维者：部署 · 配置 · 数据维护 · 安全策略</div>
+    </div>
+    <div class="foot"><span>作者：余子晨（Yushichadao）</span><span>v{{VERSION}} · {{DATE}}</span></div>
+  </section>
+
+  <h2>1. 运维端定位与登录</h2>
+  <p>运维端拥有系统<b>最高权限</b>，负责部署、系统级设置与安全策略，并处理管理端无法覆盖的全局事项。首次登录前需先在终端完成配置，<b>未配置班级名时运维者无法登录</b>。</p>
+  <div class="note">推荐先执行 <code>npm run config</code> 走一遍配置向导（班级名、数据库、邮件、活动范围等），再用 <code>npm run init</code> 初始化并启动服务。</div>
+  <div class="shot"><img src="manual-shots/ops-dashboard.png" alt="运维端概览" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 1-1　运维端概览</div></div>
+
+  <h2>2. 部署与运行</h2>
+  <p>系统为单体服务，私有化部署，数据留存于自有服务器。</p>
+  <table>
+    <tr><th>命令</th><th>作用</th></tr>
+    <tr><td><code>npm ci</code></td><td>按 lockfile 安装依赖（生产环境推荐）。</td></tr>
+    <tr><td><code>npm run config</code></td><td>终端配置向导：写入班级名、数据库路径、邮件 SMTP、活动范围等。</td></tr>
+    <tr><td><code>npm run init</code></td><td>初始化数据库并启动服务（首次自动建库）。</td></tr>
+    <tr><td><code>npm start</code></td><td>直接启动服务（配置完成后）。</td></tr>
+  </table>
+  <pre># 典型部署流程
+npm ci
+npm run config     # 交互式配置（可随时重跑）
+npm run init       # 建库并启动</pre>
+  <div class="tip">配置向导不修改业务数据，仅写配置项；可反复运行以调整设置。</div>
+
+  <h2>3. 发布活动</h2>
+  <p>运维端可发布全局活动（单次 / 长期 / 重复），并绑定活动范围、设置签到规则与窗口。</p>
+  <div class="shot"><img src="manual-shots/ops-publish.png" alt="发布活动" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 3-1　发布活动</div></div>
+
+  <h2>4. 活动管理</h2>
+  <p>查看、编辑、结束或删除全部活动，核对参与统计与范围。</p>
+  <div class="shot"><img src="manual-shots/ops-activities.png" alt="活动管理" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 4-1　活动管理</div></div>
+
+  <h2>5. 活动范围</h2>
+  <p>在地图上绘制多边形围栏，用于范围核验与位置查看；支持批量导入、命名、编辑与删除。</p>
+  <div class="shot two">
+    <figure><img src="manual-shots/ops-fences.png" alt="活动范围" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 5-1　活动范围列表</div></figure>
+    <figure><img src="manual-shots/ops-fence-editor.png" alt="范围编辑器" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 5-2　范围编辑器</div></figure>
+  </div>
+  <div class="note">坐标以 GCJ-02 存储；如与地图存在系统偏差，可在创建时使用偏移校正。范围核验不阻断签到。</div>
+
+  <h2>6. 班级签到</h2>
+  <p>以花名册查看全员状态，手工补录 / 更正签到，查看定位并导出考勤表。</p>
+  <div class="shot"><img src="manual-shots/ops-roster.png" alt="班级签到" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 6-1　班级签到花名册</div></div>
+
+  <h2>7. 运维管理</h2>
+  <p>「运维」集中系统级设置：邮件（SMTP）配置与测试、通知渠道、活动范围核验、补签开关、密码策略等。运维端的策略优先于管理端设置。</p>
+  <div class="shot"><img src="manual-shots/ops-ops.png" alt="运维管理" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 7-1　运维管理（系统设置 / 邮件 / 策略）</div></div>
+  <div class="warn">SMTP 配置错误会导致验证码与邮件通知无法送达；请在「运维」中发送测试邮件验证后再启用。</div>
+
+  <h2>8. 账号管理</h2>
+  <p>查看全部账号，授予 / 收回权限与作用域，重置密码，协助注销；可管理管理级别（辅导员 / 小班主任 / 班委）。</p>
+  <div class="shot"><img src="manual-shots/ops-accounts.png" alt="账号管理" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 8-1　账号管理（权限 / 作用域 / 级别）</div></div>
+
+  <h2>9. 日历报告</h2>
+  <p>以日历与统计形式查看全局出勤，支持按活动 / 成员筛选与汇总。</p>
+  <div class="shot"><img src="manual-shots/ops-calendar.png" alt="日历报告" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 9-1　全局日历报告</div></div>
+
+  <h2>10. 工单与系统安全</h2>
+  <h3>10.1 工单</h3>
+  <p>处理成员与管理端提交的权限 / 信息类申请。</p>
+  <div class="shot"><img src="manual-shots/ops-workorders.png" alt="工单" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 10-1　工单处理</div></div>
+  <h3>10.2 系统安全</h3>
+  <p>集中管理安全相关开关与策略（会话与会话超时、范围核验、补签、密码策略等），并查看安全事件。</p>
+  <div class="shot"><img src="manual-shots/ops-security.png" alt="系统安全" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 10-2　系统安全（开关 / 策略 / 事件）</div></div>
+
+  <h2>11. 数据流审计</h2>
+  <p>全量记录系统操作与管理员操作痕迹，可按分类筛选、检索并导出，满足审计与责任追溯要求。</p>
+  <div class="shot"><img src="manual-shots/ops-stream.png" alt="数据流" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 11-1　数据流审计（筛选 / 导出）</div></div>
+
+  <h2>12. 维护排期</h2>
+  <p>「维护」用于发布系统维护公告与计划、设置维护窗口，并查看运行状态，便于在停服前提前通知全体成员。</p>
+  <div class="shot"><img src="manual-shots/ops-maintenance.png" alt="维护排期" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 12-1　维护排期与公告</div></div>
+
+  <h2>13. 消息中心 · 账号信息 · 登录设备</h2>
+  <div class="shot two">
+    <figure><img src="manual-shots/ops-msg.png" alt="消息中心" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 13-1　消息中心</div></figure>
+    <figure><img src="manual-shots/ops-devices.png" alt="登录设备" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 13-2　登录设备</div></figure>
+  </div>
+  <div class="shot"><img src="manual-shots/ops-accountinfo.png" alt="账号信息" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 13-3　账号信息（安全 / 通知偏好）</div></div>
+
+  <h2>14. 关于与隐私 · 常见问题</h2>
+  <h3>14.1 关于与隐私</h3>
+  <p>「关于系统」查看版本、MIT 许可协议与反馈入口；隐私政策说明个人信息的收集与使用范围。</p>
+  <div class="shot"><img src="manual-shots/ops-about.png" alt="关于系统" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 14-1　关于系统（版本 / 许可 / 反馈）</div></div>
+  <h3>14.2 常见问题</h3>
+  <ul>
+    <li><b>运维者无法登录？</b> 多半是未配置班级名，先执行 <code>npm run config</code>。</li>
+    <li><b>邮件发送失败？</b> 在「运维」中检查 SMTP 主机/端口/加密/账号授权码，并发送测试邮件。</li>
+    <li><b>范围核验不生效？</b> 确认已开启范围核验并为活动绑定了围栏。</li>
+    <li><b>如何备份？</b> 备份数据库文件即可；建议定期导出数据流与考勤表归档。</li>
+    <li><b>数据存在哪里？</b> 全部留存于本服务器数据库，系统不做云端上传。</li>
+  </ul>
+
+  <!-- 正文到此结束。版权信息统一放在封底，避免末页再出现一行重复版权、并多出一张只印这行的空白页。 -->
+
+  <section class="backcover">
+    <div class="bc-logo">签</div>
+    <div class="bc-name">班级签到系统</div>
+    <div class="bc-slogan">开源 · 私有化部署 · 数据自持<br>用户端 · 管理端 · 运维端 三端协同</div>
+    <div class="bc-line">
+      本说明书适用于《班级签到系统》运维端 v{{VERSION}}。<br>
+      软件以 MIT 协议开源发布，可自由使用、二次开发与商用。<br>
+      获取部署包与其它分册：见项目 README 或官网下载页。<br>
+      Copyright © 2026 Yushichadao · 余子晨 版权所有
+    </div>
+  </section>
+</body>
+</html>
