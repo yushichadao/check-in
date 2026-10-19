@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="campus">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>用户端</title>
+  <!-- 站点图标：现代浏览器用 SVG，其余回退 PNG -->
+  <link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=2">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="vendor/polygon-clipping.umd.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/no-autofill.js"></script>
+<style id="pager-fix">
+.act-pager{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:flex-end;gap:6px;margin-top:12px;font-size:12px}
+.act-pager .page-input{width:44px!important;height:28px!important;min-height:0!important;padding:0!important;margin:0;text-align:center;font-size:13px!important;line-height:28px;border:1px solid var(--border,#d0d5dd);border-radius:6px;background:var(--surface,#fff);color:var(--text,#1a1a1a);outline:none;box-sizing:border-box;flex:0 0 auto}
+.act-pager select{width:auto!important;height:28px!important;min-height:0!important;padding:0 8px!important;font-size:12px!important;border-radius:6px;border:1px solid var(--border,#d0d5dd);background:var(--surface,#fff);color:var(--text,#1a1a1a);flex:0 0 auto}
+.act-pager .btn.sm{display:flex!important;width:auto!important;height:28px!important;min-height:0!important;max-height:28px!important;padding:0 10px!important;font-size:12px!important;line-height:28px!important;flex:0 0 auto!important;white-space:nowrap}
+.act-pager span{white-space:nowrap;flex:0 0 auto}
+@media(max-width:640px){.act-pager{gap:4px;justify-content:center}.act-pager .btn.sm{padding:0 8px!important;font-size:11px!important;height:26px!important;line-height:26px!important}.act-pager .page-input{width:36px!important;height:26px!important;line-height:26px;font-size:12px!important}.act-pager select{height:26px!important;font-size:11px!important;padding:0 4px!important;max-width:90px}.act-pager span{font-size:11px}}
+</style>
+<script src="js/brand.js" defer></script>
+</head>
+<body>
+  <!-- 统一菜单图标（线性 SVG sprite，大学风） -->
+  <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true" focusable="false">
+    <!-- 昼夜切换图标（与菜单图标同款线性风格：stroke 1.75 / 圆头圆角） -->
+    <symbol id="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+    <symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="ico-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+    <symbol id="ico-publish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+    <symbol id="ico-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></symbol>
+    <symbol id="ico-fence" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></symbol>
+    <symbol id="ico-roster" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.58 3.738a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></symbol>
+    <symbol id="ico-review" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+    <symbol id="ico-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="ico-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
+    <symbol id="ico-perms" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+    <symbol id="ico-notify" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></symbol>
+    <symbol id="ico-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+    <symbol id="ico-account" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="11" x="4" y="9" rx="2"/><path d="M8 9V5a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="ico-devices" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></symbol>
+    <symbol id="ico-stream" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+    <symbol id="ico-about" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="ico-checkin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="ico-records" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+    <symbol id="ico-appeal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="ico-profile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></symbol>
+    <symbol id="ico-ops" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="ico-workorders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h2"/></symbol>
+    <symbol id="ico-maintenance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <!-- 地图（签到页「活动范围地图」入口）：折页地图 + 中缝折线，与菜单图标同款线性风格 -->
+    <symbol id="ico-follow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></symbol>
+    <symbol id="ico-free" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M19 9l3 3-3 3"/><path d="M9 19l3 3 3-3"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></symbol>
+    <symbol id="ico-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 5.618v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></symbol>
+  </svg>
+  <div class="shell">
+    <nav class="sidebar">
+      <div class="brand"><div class="brand-line"><span class="dot"></span><span data-brand>班级签到系统</span></div><span class="brand-sub" data-subtitle></span></div>
+      <button class="nav-item" data-section="checkin"><svg class="ico" aria-hidden="true"><use href="#ico-checkin"/></svg>签到</button>
+      <button class="nav-item" data-section="activities"><svg class="ico" aria-hidden="true"><use href="#ico-activity"/></svg>活动</button>
+      <button class="nav-item" data-section="stats"><svg class="ico" aria-hidden="true"><use href="#ico-calendar"/></svg>日历报告</button>
+      <button class="nav-item" data-section="records"><svg class="ico" aria-hidden="true"><use href="#ico-records"/></svg>签到记录</button>
+      <button class="nav-item" data-section="appeal"><svg class="ico" aria-hidden="true"><use href="#ico-appeal"/></svg>申诉</button>
+      <button class="nav-item" data-section="dataflow"><svg class="ico" aria-hidden="true"><use href="#ico-stream"/></svg>数据流</button>
+      <button class="nav-item" data-section="msg"><svg class="ico" aria-hidden="true"><use href="#ico-msg"/></svg>消息中心<span class="n-badge hidden">0</span></button>
+      <button class="nav-item" data-section="accountinfo"><svg class="ico" aria-hidden="true"><use href="#ico-account"/></svg>账号信息</button>
+      <button class="nav-item" data-section="devices"><svg class="ico" aria-hidden="true"><use href="#ico-devices"/></svg>登录设备</button>
+      <button class="nav-item" data-section="about"><svg class="ico" aria-hidden="true"><use href="#ico-about"/></svg>关于系统</button>
+    </nav>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="who" id="whoBar">加载中…</div>
+        <div class="row">
+          <button class="btn sm" id="themeToggleBtn" type="button" title="切换到夜间模式" aria-label="切换到夜间模式" aria-pressed="false"><svg class="ico" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ico-moon"></use></svg><span id="themeToggleText">夜间</span></button>
+          <button class="btn sm" id="switchAccountBtn">切换账号</button>
+          <button class="btn sm" id="logoutBtn">登出</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div id="pwdAlert"></div>
+
+        <!-- 签到页 -->
+        <section class="section" id="sec-checkin">
+          <div class="card">
+            <header>
+              <h2>当前活动</h2>
+              <button class="btn sm" id="refreshBtn" data-clean-hide>刷新</button>
+            </header>
+            <div id="activityBox"><div class="empty">加载中…</div></div>
+          </div>
+
+          <div class="card">
+            <header>
+              <h3>我的状态</h3>
+              <span class="tag" id="locTag" data-loc>定位未获取</span>
+            </header>
+            <div class="choices">
+              <div class="choice signed" data-choice="signed">
+                <div class="big">签到</div>
+                <div class="sub" id="signSub" data-clean-hide>活动范围仅供参考</div>
+              </div>
+              <div class="choice ontheway" data-choice="ontheway">
+                <div class="big">在途中</div>
+                <div class="sub" data-clean-hide>未到达可先标记</div>
+              </div>
+              <div class="choice leave" data-choice="leave">
+                <div class="big">请假</div>
+                <div class="sub" data-clean-hide>需管理员审核</div>
+              </div>
+            </div>
+
+            <!-- 定位提示：说明本次提交是否会采集位置。
+                 是否上传定位只由本人「自愿授权」决定，不再提供「定位模式（二选一）」——
+                 原二选一不随提交上报、两种模式实际行为完全一致，属无效选项，已移除。 -->
+            <div class="muted" style="font-size:12px;margin-top:14px;line-height:1.7" id="locModeHint" data-loc></div>
+
+            <div class="field hidden" id="reasonField" style="margin-top:14px">
+              <label>请假理由</label>
+              <textarea id="reason" placeholder="请填写请假理由"></textarea>
+            </div>
+
+            <div class="row between" style="margin-top:18px;gap:12px">
+              <button class="btn big btn-map" id="viewFenceBtn" type="button" title="打开地图查看活动范围、目的地与我的位置">
+                <svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-map"/></svg>
+                <span class="btn-map-txt"><b>活动范围地图</b><small>目的地 · 我的位置</small></span>
+              </button>
+              <button class="btn primary big" id="submitChoice" type="button" disabled>提交</button>
+            </div>
+
+            <div class="muted" style="font-size:12px;margin-top:12px;line-height:1.7" data-clean-hide>
+              请先选择签到状态（签到 / 在途中 / 请假），再点击「提交」。
+            </div>
+
+            <div class="muted" style="margin-top:16px;font-size:12px;line-height:1.7" data-clean-hide>
+              活动范围仅供参考，<b>不在范围内也可以正常签到</b>，不会阻止你提交。<span data-loc><br>
+              若你已自愿授权上传定位，系统仅在前台获取定位、<b>不做后台持续定位</b>，且定位不会保存在你的手机或任何页面上。</span><br>
+              进入活动范围不代表已到教室，请自行确认后选择「签到」。
+            </div>
+          </div>
+        </section>
+
+        <!-- 申诉（请假 / 补签） -->
+        <section class="section" id="sec-appeal">
+          <div class="card">
+            <header><h2>提交申诉</h2><button class="btn sm" id="reloadAppealForm" data-clean-hide>刷新</button></header>
+            <div class="muted" style="font-size:12px;line-height:1.7" data-clean-hide>
+              审核由班委初步裁决、小班主任 / 辅导员终审；<b>审核留言会随邮件发给你</b>。
+            </div>
+            <div class="grid cols-2" style="margin-top:10px">
+              <div class="field">
+                <label>活动</label>
+                <select id="apActivity"></select>
+              </div>
+              <div class="field">
+                <label>申诉类型</label>
+                <select id="apType">
+                  <option value="makeup">补签</option>
+                  <option value="leave">事后请假</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label>理由</label>
+              <textarea id="apReason" placeholder="请说明理由，管理员审核时可见"></textarea>
+            </div>
+            <div class="field">
+              <label>佐证材料（可选，最多 3 张图片）</label>
+              <input id="apFiles" type="file" accept="image/*" multiple class="hidden">
+              <div class="row" style="gap:12px;align-items:center;margin-top:2px">
+                <button class="btn img-pick" id="apFilesBtn" type="button">选择图片</button>
+                <span class="muted" id="apFilesHint" style="font-size:12px" data-clean-hide>未选择图片（可选，最多 3 张）</span>
+              </div>
+              <div class="att-grid" id="apPreviews"></div>
+              <div class="muted" style="font-size:12px" data-clean-hide>图片会自动压缩后上传，仅审核该申诉的管理员可见；点击缩略图可放大查看。</div>
+            </div>
+            <button class="btn primary" id="apSubmit">提交申诉</button>
+          </div>
+
+          <div class="card">
+            <header><h2>我的申诉进度</h2><button class="btn sm" id="reloadAppeal" data-clean-hide>刷新</button></header>
+            <div class="muted" style="font-size:12px;margin-bottom:8px" data-clean-hide>
+              初审由班委裁决（裁决后本级不可更改）；若对结果有异议，可在详情里<b>提出申诉</b>，
+              由小班主任 / 辅导员终审，终审为最终结果。提交后请在本卡片查看审核进度与审核留言。
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>类型</th><th>活动</th><th>理由</th><th>状态</th><th>审核留言</th><th>提交时间</th><th>操作</th></tr></thead>
+                <tbody id="appealRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 活动列表 -->
+        <section class="section" id="sec-activities">
+          <div class="card">
+            <header><h2>活动列表</h2></header>
+            <div class="act-controls">
+              <select id="userActFilter">
+                <option value="upcoming">待开展活动</option>
+                <option value="history">历史活动</option>
+                <option value="all">全部活动</option>
+              </select>
+              <span class="muted" style="font-size:12px;white-space:nowrap">每页</span>
+              <select id="userActPageSize" style="width:auto">
+                  <option value="10">10 项</option>
+                  <option value="20">20 项</option>
+                  <option value="50">50 项</option>
+                  <option value="100">100 项</option>
+                  <option value="all">全部</option>
+                </select>
+              </label>
+              <span class="act-stats muted" id="userActPageInfo"></span>
+            </div>
+            <div id="userActList"><div class="empty">加载中…</div></div>
+            <div class="act-pager" id="userActPager">
+              <button class="btn sm" id="userActPrev">上一页</button>
+              <span>第</span>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="userActPageInput" min="1" value="1" class="page-input" style="width:44px;height:28px;padding:0;text-align:center;font-size:13px;box-sizing:border-box">
+              <span>/ <span id="userActTotalPages">1</span> 页</span>
+              <button class="btn sm" id="userActNext">下一页</button>
+            </div>
+          </div>
+        </section>
+        <!-- 考勤统计 -->
+        <section class="section" id="sec-stats">
+          <div class="card">
+            <header>
+              <h2>签到日历</h2>
+              <div class="row">
+                <input type="month" id="calMonth" >
+              </div>
+            </header>
+            <div id="myCalendar"></div>
+            <div id="mySummary" class="row" style="margin-top:12px"></div>
+          </div>
+          <div class="card" id="calDetailCard">
+            <header><h2>当天详情</h2></header>
+            <div id="myCalendarDetail" class="cal-detail muted">点击日历中的日期，查看当天详情</div>
+          </div>
+        </section>
+        <!-- 签到记录 -->
+        <section class="section" id="sec-records">
+          <div class="card">
+            <header><h2>签到记录</h2></header>
+            <div class="muted" style="font-size:12px;margin-bottom:8px" data-clean-hide>你提交的签到、请假、补签结果都会显示在此。</div>
+            <div class="row act-toolbar">
+              <span class="muted" style="font-size:12px;white-space:nowrap">每页</span>
+              <select id="recPageSize" style="width:auto">
+                  <option value="10">10 项</option>
+                  <option value="20">20 项</option>
+                  <option value="50">50 项</option>
+                </select>
+              </label>
+              <span class="muted" id="recPageInfo"></span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>活动</th><th>开始</th><th>状态</th><th>活动范围</th><th>管理员操作</th><th>提交时间</th></tr>
+                </thead>
+                <tbody id="recordRows"></tbody>
+              </table>
+            </div>
+            <div class="act-pager">
+              <button class="btn sm" id="recPrev">上一页</button>
+              <span>第</span>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="recPageInput" min="1" value="1" class="page-input" style="width:44px;height:28px;padding:0;text-align:center;font-size:13px;box-sizing:border-box">
+              <span>/ <span id="recTotalPages">1</span> 页</span>
+              <button class="btn sm" id="recNext">下一页</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 数据流（独立页） -->
+        <section class="section" id="sec-dataflow">
+          <div class="card">
+            <header>
+              <h2>数据流</h2>
+              <button class="btn sm" id="reloadMyStream" data-clean-hide>刷新</button>
+            </header>
+            <div class="muted" style="font-size:12px;margin-bottom:8px" data-clean-hide>显示你自己的操作，以及管理员对你账号的操作。</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>时间</th><th>类型</th><th>操作内容</th><th>操作</th></tr></thead>
+                <tbody id="myStreamRows"></tbody>
+              </table>
+            </div>
+            <div class="act-pager">
+              <span>每页</span>
+              <select id="myStreamPageSize">
+                <option value="10">10 项</option><option value="15" selected>15 项</option><option value="20">20 项</option>
+                <option value="30">30 项</option><option value="50">50 项</option><option value="100">100 项</option>
+                <option value="200">200 项</option><option value="0">所有项</option>
+              </select>
+              <button class="btn sm" id="myStreamPrev">上一页</button>
+              <span>第</span>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="myStreamPageInput" min="1" value="1" class="page-input" style="width:44px;height:28px;padding:0;text-align:center;font-size:13px;box-sizing:border-box">
+              <span>/ <span id="myStreamTotalPages">1</span> 页</span>
+              <button class="btn sm" id="myStreamNext">下一页</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 账号信息（用户端：基本信息 + 账号安全 + 定位上传授权 + 通知偏好） -->
+        <section class="section" id="sec-accountinfo">
+          <!-- 基本信息 -->
+          <div class="card">
+            <header><h2>基本信息</h2></header>
+            <div id="profileBox"></div>
+          </div>
+
+          <!-- 账号安全 -->
+          <div class="card">
+            <header><h2>账号安全</h2></header>
+            <div class="row" style="gap:8px;flex-wrap:wrap">
+              <button class="btn" type="button" id="openPwdModalBtn">修改密码</button>
+              <button class="btn" type="button" id="openEmailModalBtn">找回邮箱</button>
+              <button class="btn warn" type="button" id="gotoForgotBtn">忘记密码（邮箱验证码重置）</button>
+              <button class="btn danger" type="button" id="cancelBtn">注销账号</button>
+            </div>
+
+          </div>
+
+          <!-- 定位上传授权 -->
+          <div class="card" data-loc>
+            <header><h2>定位上传授权</h2></header>
+            <div class="muted" style="font-size:12px;line-height:1.7" data-clean-hide>
+              是否采集并上传定位由你<b>自愿授权</b>：<b>不授权也能正常签到</b>，只是不采集位置；授权后<b>后续每次签到将默认自动获取并上传你的位置</b>，活动范围判定仅供参考，不会因不在范围内而阻止你签到。你随时可在此点击「取消授权」立即停止采集，也可重新授权恢复；<b>授权状态属你的个人隐私，不会进入数据流</b>。
+            </div>
+            <div id="locConsentState" class="row" style="margin-top:10px;gap:8px;align-items:center;flex-wrap:wrap"></div>
+          </div>
+
+          <!-- 通知偏好 -->
+          <div class="card">
+            <header>
+              <h2>通知偏好</h2>
+              <button class="btn sm primary" id="npSave" type="button">保存</button>
+            </header>
+            <!-- 说明文字由 NotifyPrefs 渲染时自带（各组说明 + 「必保留」徽章），此处不再重复提供 -->
+            <div id="npBox"><div class="empty">加载中…</div></div>
+          </div>
+
+          <!-- 界面偏好（新增：清爽模式开关） -->
+          <div class="card">
+            <header><h2>界面偏好</h2></header>
+            <div id="cleanModeToggle" class="row" style="margin-top:10px;gap:10px;align-items:center;flex-wrap:wrap"></div>
+          </div>
+        </section>
+
+        <!-- 登录设备 -->
+        <section class="section" id="sec-devices">
+          <div class="card">
+            <header><h2>登录设备</h2><button class="btn sm" id="reloadDevices" data-clean-hide>刷新</button></header>
+            <div class="muted" style="font-size:12px;line-height:1.7" data-clean-hide>
+              同一账号最多同时在线两台设备（一台手机、一台电脑）；同一设备同一层级账号只保留一个。
+              发现陌生设备可将其下线，被下线的设备需重新登录。
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>设备</th><th>类型</th><th>状态</th><th>最近活动</th><th>操作</th></tr></thead>
+                <tbody id="deviceRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 消息中心（站内信） -->
+        <section class="section" id="sec-msg"></section>
+
+        <!-- 关于系统 -->
+        <section class="section" id="sec-about">
+          <div class="card">
+            <header><h2>关于系统</h2></header>
+            <div id="aboutInfo"><div class="loading">加载中…</div></div>
+          </div>
+
+          <div class="card">
+            <header><h2>软件许可协议</h2></header>
+            <div class="muted" id="aboutRights" style="white-space:pre-wrap;line-height:1.95"></div>
+          </div>
+
+          <div class="card">
+            <header><h2>向运维者反馈问题</h2></header>
+            <div class="muted" style="font-size:13px;line-height:1.8;margin-bottom:12px" data-clean-hide>
+              遇到问题、发现异常或有改进建议？可随时提交反馈。反馈将以<b>工单</b>形式进入系统、由<b>本系统的运维者（部署管理员）</b>受理，不会送抵软件开发方；
+              若已配置邮件，亦可<b>同时发送邮件</b>给运维者。
+            </div>
+            <div class="row" style="gap:8px;flex-wrap:wrap">
+              <button class="btn primary" id="openFeedbackBtn" type="button">向运维者反馈问题</button>
+              <button class="btn" id="openFeedbackListBtn" type="button">查看反馈工单</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- 活动范围 / 位置查看（用户自己查看位置，纯本地展示，不受定位核验总开关影响） -->
+  <div class="modal-mask hidden" id="fenceModal" data-noscroll data-modal-kind="close">
+    <div class="modal wide">
+      <h3>活动范围与我的位置</h3>
+      <div class="row" style="gap:12px;flex-wrap:wrap">
+        <div id="uLayerBtn" class="layer-toggle" role="group" aria-label="底图切换（电子地图 / 卫星地图）"></div>
+        <div id="uFollowBtn" class="layer-toggle follow-toggle" role="group" aria-label="镜头跟随"><button data-v="on" class="active" type="button"><svg class="ico"><use href="#ico-follow"/></svg> 跟随定位</button><button data-v="off" type="button"><svg class="ico"><use href="#ico-free"/></svg> 自由浏览</button></div>
+        <button class="btn sm primary" id="uTrackBtn" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 开始连续定位</button>
+        <span class="muted" id="uLocState" data-clean-hide></span>
+      </div>
+      <div id="uFenceTip" class="alert info hidden" style="margin-top:8px" data-clean-hide></div>
+      <div id="userFenceMap" class="fence-map"></div>
+    </div>
+  </div>
+
+  <!-- 定位上传授权：首次涉及定位时自愿确认（不授权也可正常签到） -->
+  <div class="modal-mask hidden" id="locConsentModal" data-noscroll data-loc>
+    <div class="modal">
+      <h3>是否自愿授权上传定位？</h3>
+      <div class="alert info">
+        本活动设置了活动范围。是否自愿授权系统在本次签到时<b>采集并上传你的定位</b>？
+        <div style="margin-top:8px">
+          · <b>授权</b>：后续每次签到将<b>默认自动获取并上传你的位置</b>（界面显示「正在获取定位…」），活动范围判定仅供参考；<br>
+          · <b>不授权</b>：<b>同样可以正常签到</b>，只是不采集、不上传你的位置。<br>
+          · 无论是否授权，<b>都不会因为不在活动范围内而阻止你签到</b>。<br>
+          · 你可随时在「账号信息 → 定位上传授权」取消或重新授权；该授权状态属个人隐私，<b>不会进入数据流</b>。
+        </div>
+      </div>
+      <div class="row end">
+        <button class="btn primary" id="locConsentYes" type="button">自愿授权</button>
+        <button class="btn" id="locConsentNo" type="button">不授权</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 公告弹窗（一次性：确认后不再弹出） -->
+  <div class="modal-mask hidden" id="announcementModal" data-noscroll data-modal-kind="cancel">
+    <div class="modal">
+      <h3>公告</h3>
+      <div id="announcementText" class="muted" style="white-space:pre-wrap;max-height:40vh;overflow:auto"></div>
+      <div class="muted" style="font-size:12px;line-height:1.7" data-clean-hide>
+        这是运维者发布的公告。确认后本次不再弹出；发布新公告时会再次提示。
+      </div>
+      <div class="row end">
+        <button class="btn primary" id="announcementOk">我知道了</button>
+        <button class="btn" id="announcementLater">稍后</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 忘记密码：邮箱验证码自助重置（分步） -->
+  <div class="modal-mask hidden" id="forgotModal" data-modal-kind="cancel">
+    <div class="modal">
+      <h3>忘记密码 · 邮箱验证码重置</h3>
+      <p style="margin:0" data-clean-hide>
+        用你在「账号信息 → 找回邮箱」中登记的邮箱接收验证码自助重置；
+        若未登记邮箱或收不到邮件，请改用「请求管理员 / 运维者清除密码」。
+      </p>
+      <div class="field"><label>姓名</label><input id="fgName" autocomplete="off"></div>
+      <div class="field">
+        <label>身份</label>
+        <select id="fgIdentity">
+          <option value="普通学生">普通学生</option>
+          <option value="班委">班委</option>
+          <option value="小班主任">小班主任</option>
+          <option value="辅导员">辅导员</option>
+          <option value="运维者">运维者</option>
+        </select>
+      </div>
+      <div class="field"><label>学号</label><input id="fgSid" placeholder="请输入学号（管理员可留空）" autocomplete="off"></div>
+      <div class="field">
+        <label>登记邮箱</label>
+        <div class="row" style="gap:8px">
+          <input id="fgEmail" style="flex:1;min-width:0" placeholder="注册时填写的邮箱" autocomplete="off">
+          <button class="btn" id="fgSendCode" type="button">发送验证码</button>
+        </div>
+      </div>
+      <div class="field"><label>邮箱验证码</label><input id="fgCode" placeholder="6 位数字" maxlength="6" autocomplete="off"></div>
+      <div class="field"><label>新密码</label><input id="fgPwd" type="password" placeholder="至少 6 位" autocomplete="new-password" name="__off_fg"></div>
+      <div class="field"><label>确认新密码</label><input id="fgPwd2" type="password" autocomplete="new-password" name="__off_fg2"></div>
+      <div class="row end">
+        <button class="btn primary" id="fgResetBtn" type="button">重置密码</button>
+        <button class="btn" id="fgClose">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改密码浮窗 -->
+  <div class="modal-mask hidden" id="pwdModal" data-modal-kind="cancel">
+    <div class="modal">
+      <h3>修改密码</h3>
+      <form id="pwdForm">
+        <div class="field"><label>原密码</label><input type="password" id="oldPwd" autocomplete="off" name="__off_old"></div>
+        <div class="field"><label>新密码</label><input type="password" id="newPwd" placeholder="至少 6 位，含字母和数字" autocomplete="new-password" name="__off_new"></div>
+        <div class="field"><label>确认新密码</label><input type="password" id="newPwd2" autocomplete="new-password" name="__off_new2"></div>
+        <div class="row end">
+          <button class="btn primary" type="submit">确认修改</button>
+          <button class="btn" type="button" id="pwdModalClose">关闭</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 找回邮箱浮窗 -->
+  <div class="modal-mask hidden" id="emailModal" data-modal-kind="cancel">
+    <div class="modal">
+      <h3>找回邮箱</h3>
+      <div class="muted" style="font-size:13px;line-height:1.7" data-clean-hide>用于自助找回密码；如已登记过邮箱，修改时需输入当前登录密码验证。</div>
+      <div class="field"><label>邮箱</label><input id="myEmail" type="email" placeholder="如 name@example.com" autocomplete="off"></div>
+      <div class="field" id="myEmailPwdField" style="display:none"><label>当前登录密码</label><input id="myEmailPwd" type="password" autocomplete="off"></div>
+      <div class="row end">
+        <button class="btn primary" id="saveMyEmail" type="button">保存邮箱</button>
+        <button class="btn" type="button" id="emailModalClose">关闭</button>
+      </div>
+      <span id="myEmailMsg" class="muted" style="font-size:12px;display:block;margin-top:6px"></span>
+    </div>
+  </div>
+
+  <!-- 反馈工单列表浮窗 -->
+    <div class="modal-mask hidden" id="feedbackListModal" data-modal-kind="close">
+    <div class="modal wide">
+      <div class="modal-head">
+        <h3>反馈工单</h3>
+        <button class="modal-close" type="button" aria-label="关闭" title="关闭" onclick="this.closest('.modal-mask').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="feedbackListBox" class="fb-list-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/layer-toggle.js"></script>
+  <script src="js/perm-gate.js"></script>
+  <script src="js/notify-center.js"></script>
+  <script src="js/fence-editor.js"></script>
+  <script src="js/account-info.js"></script>
+  <script src="js/clean-mode.js"></script>
+  <script src="js/user.js"></script>
+  <script src="js/about.js"></script>
+</body>
+</html>

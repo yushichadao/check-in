@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="campus">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>班级签到系统 · 首次设置</title>
+  <!-- 站点图标：现代浏览器用 SVG，其余回退 PNG -->
+  <link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=2">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/theme.js"></script>
+<script src="js/brand.js" defer></script>
+</head>
+<body>
+  <div class="content">
+    <div class="card form-card" style="max-width:560px">
+      <header>
+        <h2>欢迎，先完成首次设置</h2>
+      </header>
+
+      <div id="msg"></div>
+
+      <div id="roleHint" class="alert info" style="font-size:12px;line-height:1.7"></div>
+
+      <div id="npBox"><div class="empty">加载中…</div></div>
+
+      <!-- 学生端：定位上传授权（活动范围核验场景下的个人隐私选择，可跳过） -->
+      <div class="card hidden" id="secLoc">
+        <header><h2>定位上传授权</h2></header>
+        <div class="muted" style="font-size:12px;line-height:1.7">
+          仅在老师开启「活动范围核验」、且你本人同意时，才会采集你签到时的位置。
+          <b>不授权也能正常签到</b>，本页<b>默认为「暂不授权」</b>，你可主动改为授权；
+          之后可随时在「账号信息 → 定位上传授权」更改；该选择属于个人隐私，不写入操作留痕。
+        </div>
+        <div class="row" style="gap:8px;margin-top:10px">
+          <button class="btn" id="locYes" type="button">自愿授权</button>
+          <button class="btn primary" id="locNo" type="button">暂不授权</button>
+        </div>
+      </div>
+
+      <!-- 学生端：界面偏好（清爽模式，默认开启）—— 开关样式与「账号信息 → 界面偏好」一致 -->
+      <div class="card hidden" id="secClean">
+        <header><h2>界面偏好</h2></header>
+        <div class="cm-row" style="margin-top:10px">
+          <div class="cm-meta">
+            <div class="cm-name">清爽模式</div>
+            <div class="cm-desc muted">隐藏非必要的说明文字、冗余按钮，以及被上级禁用（无权限）的功能入口，让界面更聚焦。默认开启，之后可在「账号信息 → 界面偏好」中随时关闭。</div>
+          </div>
+          <label class="cm-switch" title="开启后隐藏非必要说明与冗余按钮">
+            <input type="checkbox" id="cleanModeChk" checked aria-pressed="true" aria-label="清爽模式">
+            <span class="cm-track"><span class="cm-knob"></span></span>
+          </label>
+          <span class="cm-state muted" id="cleanModeState">已开启</span>
+        </div>
+      </div>
+
+      <!-- 管理端：班级通用设置（有权限者可直接在此配置；无权限保留入口提示） -->
+      <div class="card hidden" id="secMgr">
+        <header><h2>班级通用设置</h2></header>
+        <div id="mgrNotice" class="muted" style="font-size:12px;line-height:1.7">
+          正在读取班级通用设置…
+        </div>
+        <div id="mgrSettings" class="hidden"></div>
+      </div>
+
+      <!-- 运维端：运维开关 -->
+      <div class="card hidden" id="secDev">
+        <header><h2>运维开关</h2></header>
+        <label class="row" style="gap:8px;align-items:center">
+          <input type="checkbox" id="devMask" style="width:auto"> 数据流隐私打码（列表内姓名 / 学号中间打码）
+        </label>
+        <label class="row" style="gap:8px;align-items:center">
+          <input type="checkbox" id="devAutoCover" style="width:auto"> 自动代管（缺上级时由下一级在岗管理岗代行其基线权力）
+        </label>
+        <div class="muted" style="font-size:12px">维护模式、账号管理范围等见「维护排期」「系统安全」。</div>
+      </div>
+
+      <div class="row" style="margin-top:16px">
+        <button class="btn primary block big" id="finishBtn" type="button">完成设置，进入系统</button>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:8px;text-align:center">
+        完成设置后即可正常使用系统；之后仍可在「账号信息 → 通知偏好」中随时修改。
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/setup.js"></script>
+</body>
+</html>

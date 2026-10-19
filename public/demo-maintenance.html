@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="campus">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>维护遮罩 & 登录页横幅 · 组件预览</title>
+  <!-- 站点图标：现代浏览器用 SVG，其余回退 PNG -->
+  <link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=2">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+    .page { max-width: 1080px; margin: 0 auto; padding: 28px 18px 60px; }
+    .page > h1 { font-size: 22px; margin: 0 0 4px; }
+    .page > .lead { color: var(--muted); margin: 0 0 22px; font-size: 14px; line-height: 1.6; }
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 820px) { .demo-grid { grid-template-columns: 1fr; } }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 6px 22px rgba(20,40,80,.08); }
+    .panel-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .panel-head h2 { font-size: 15px; margin: 0; }
+    .panel-head .tag { font-size: 12px; color: var(--muted); }
+    .panel-note { padding: 10px 16px; font-size: 12.5px; line-height: 1.6; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+
+    /* 模拟登录页舞台 */
+    .login-stage { position: relative; padding: 0; }
+    .login-stage .content { max-width: 360px; margin: 22px auto; padding: 0 16px; }
+    .login-stage .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; box-shadow: 0 6px 22px rgba(20,40,80,.08); }
+    .login-stage .form-card h2 { margin: 0 0 14px; font-size: 18px; }
+    .login-stage .field { margin-bottom: 12px; }
+    .login-stage .field label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--muted); }
+    .login-stage .field input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; }
+    .login-stage .foot-row { display: flex; justify-content: space-between; font-size: 13px; margin-top: 14px; }
+    .login-stage .foot-row a { color: var(--primary); text-decoration: none; }
+    .login-stage .foot-row a.maint-disabled { color: var(--muted); opacity: .55; pointer-events: auto; cursor: not-allowed; }
+
+    /* 让维护遮罩在舞台内演示（而非铺满整屏） */
+    .overlay-stage { position: relative; height: 460px; overflow: hidden; background: #f3f5fa; }
+    .overlay-stage .maintenance-overlay { position: absolute; }
+    .overlay-stage .demo-bg { position: absolute; inset: 0; padding: 18px; color: var(--muted); font-size: 13px; opacity: .7; }
+  </style>
+<script src="js/brand.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <h1>维护模式 · 组件预览</h1>
+    <p class="lead">
+      系统维护时有两种不同触达方式：已登录用户看到<strong>全屏维护遮罩</strong>（禁止操作，服务端同时拦截请求）；
+      未登录的登录页<strong>不盖全屏遮罩</strong>（需放行运维者登录以关闭维护），改用<strong>顶部横幅</strong>告知并拦截注册 / 找回密码入口。
+      下方分别展示两种样式，均复用线上真实 CSS。
+    </p>
+
+    <div class="demo-grid">
+      <!-- ① 登录页横幅 -->
+      <section class="panel">
+        <div class="panel-head"><h2>① 登录页横幅</h2><span class="tag">未登录态 · 顶部横幅</span></div>
+        <div class="panel-note">
+          维护中登录页顶部出现的横幅（<code>.maint-top-banner</code>）；「注册 / 找回密码」链接被置灰并拦截点击，<strong>点击只提示、不会进入注册页</strong>（<code>.maint-disabled</code>）。可点击下方灰色链接体验拦截提示。
+        </div>
+        <div class="login-stage">
+          <!-- 与 login.html 同结构：顶部横幅 + 登录卡片 -->
+          <div id="maintTopBanner" class="maint-top-banner" role="alert">
+            <span class="m-banner-title">
+              <svg class="m-banner-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <b>系统维护中</b>
+            </span>
+            <span class="m-banner-msg">仅运维者可操作，其他用户暂无法使用；注册 / 找回密码功能亦暂停。</span>
+            <span class="m-banner-foot">
+              <span class="m-banner-meta">2026-09-23 20:00 – 2026-09-23 22:00</span>
+              维护说明：升级签到服务器，预计 22:00 前恢复。
+            </span>
+          </div>
+          <div class="content">
+            <div class="form-card">
+              <h2>账号登录</h2>
+              <div class="field"><label>学号 / 邮箱</label><input placeholder="请输入学号或邮箱" disabled></div>
+              <div class="field"><label>密码</label><input type="password" placeholder="请输入密码" disabled></div>
+              <button class="btn primary" style="width:100%" disabled>登录</button>
+              <div class="row between foot-row">
+                <a href="register.html" class="maint-disabled">还没有账号？去注册</a>
+                <a href="forgot.html" class="maint-disabled">忘记密码</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ② 维护遮罩 -->
+      <section class="panel">
+        <div class="panel-head"><h2>② 维护遮罩</h2><span class="tag">已登录非运维者 · 全屏遮罩</span></div>
+        <div class="panel-note">
+          已登录且非运维者账号看到的<code>.maintenance-overlay</code>：白底全屏卡片，展示起止时间、维护说明与「退出登录」入口；
+          F12 删除遮罩也会被 MutationObserver 重建（服务端仍会拦截一切非法操作）。
+        </div>
+        <div class="overlay-stage">
+          <div class="demo-bg">（此处模拟底层业务页面，维护中已被遮罩盖住）</div>
+          <div class="maintenance-overlay">
+            <div class="maintenance-card">
+              <div class="maintenance-spin" aria-hidden="true"></div>
+              <h2 class="maintenance-title">系统维护中</h2>
+              <p class="maintenance-sub">系统正在更新维护。维护期间仅运维者可操作，其他用户将暂时无法使用；维护结束后自动恢复。</p>
+              <div class="maintenance-meta">
+                <div class="m-item"><span class="m-label">开始时间</span><span class="m-value">2026-09-23 20:00</span></div>
+                <div class="m-item"><span class="m-label">预计结束</span><span class="m-value">2026-09-23 22:00</span></div>
+              </div>
+              <p class="maintenance-note">维护说明：升级签到服务器，预计 22:00 前恢复，给您带来不便敬请谅解。</p>
+              <button id="maintLogoutBtn" class="btn primary maintenance-logout" type="button">退出登录</button>
+              <p class="maintenance-foot">维护结束后会自动恢复，无需重新登录。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ 注册 / 找回页：维护中整页锁定 -->
+      <section class="panel">
+        <div class="panel-head"><h2>③ 注册 / 找回页</h2><span class="tag">维护中 · 整页锁定</span></div>
+        <div class="panel-note">
+          注册 / 找回页在维护中被<strong>整页不透明遮罩</strong>锁住（<code>window.__maintLockPage</code>，含运维者），用户<strong>进不去</strong>。
+          即便能进入，底层「获取验证码 / 确认设置 / 提交找回」等按钮也已置灰并拦截点击、给出提示（前端兜底）。
+        </div>
+        <div class="overlay-stage">
+          <div class="demo-bg">
+            <div class="form-card" style="max-width:320px;margin:18px auto;background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px">
+              <h2 style="font-size:17px;margin:0 0 12px">注册 / 设置密码</h2>
+              <div class="field" style="margin-bottom:10px"><label style="font-size:13px;color:var(--muted)">姓名</label><input style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--border);border-radius:9px"></div>
+              <div class="field" style="margin-bottom:10px"><label style="font-size:13px;color:var(--muted)">邮箱</label><input style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--border);border-radius:9px"></div>
+              <button class="btn maint-disabled" style="width:100%">获取验证码</button>
+              <button class="btn primary maint-disabled" style="width:100%;margin-top:8px">确认设置</button>
+            </div>
+          </div>
+          <div class="maintenance-overlay">
+            <div class="maintenance-card">
+              <div class="maintenance-spin" aria-hidden="true"></div>
+              <h2 class="maintenance-title">系统维护中</h2>
+              <p class="maintenance-sub">系统正在更新维护。维护期间仅运维者可操作，其他用户将暂时无法使用；维护结束后自动恢复。</p>
+              <div class="maintenance-meta">
+                <div class="m-item"><span class="m-label">开始时间</span><span class="m-value">2026-09-23 20:00</span></div>
+                <div class="m-item"><span class="m-label">预计结束</span><span class="m-value">2026-09-23 22:00</span></div>
+              </div>
+              <p class="maintenance-note">维护说明：升级签到服务器，预计 22:00 前恢复，给您带来不便敬请谅解。</p>
+              <button id="maintLogoutBtn2" class="btn primary maintenance-logout" type="button">退出登录</button>
+              <p class="maintenance-foot">维护结束后会自动恢复，无需重新登录。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <p class="lead" style="margin-top:24px">
+      说明：本页仅作静态样式预览，未连接后端、不会触发真实维护。如需在线上查看真实效果，
+      可在运维端「系统设置 → 维护模式」点击「立即进入维护」（仅运维者可结束）。
+    </p>
+  </div>
+
+  <script>
+    // 仅演示用 toast：复用线上 .toast.error 样式（app.css 已引入），保证 UI 一致
+    function demoToast(msg) {
+      var old = document.querySelector('.toast.error');
+      if (old) old.remove();
+      var t = document.createElement('div');
+      t.className = 'toast error';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(function () { t.remove(); }, 4200);
+    }
+    // 登录页被置灰的「注册 / 找回密码」链接：点击拦截并提示（与线上 login.js guardLoginLinks 一致），不会进入注册页
+    document.querySelectorAll('.login-stage .foot-row a.maint-disabled').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        demoToast('系统维护中，注册 / 找回密码功能暂不可用，请稍后再试');
+      });
+    });
+    // 维护遮罩里的「退出登录」：仅演示提示，不真正跳转
+    ['maintLogoutBtn', 'maintLogoutBtn2'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.addEventListener('click', function () {
+        demoToast('演示：真实环境中此按钮会退出登录并回到登录页（遮罩随之撤下）。');
+      });
+    });
+  </script>
+</body>
+</html>

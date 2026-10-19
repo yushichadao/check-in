@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="签到">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a5183"/>
+      <stop offset="1" stop-color="#16304f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#tile)"/>
+  <path d="M20 33.5 L28 41.5 L44 24" fill="none" stroke="#d8b877" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
