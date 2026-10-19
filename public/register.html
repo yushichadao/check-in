@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="campus">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>班级签到系统 · 注册 / 设置密码</title>
+  <!-- 站点图标：现代浏览器用 SVG，其余回退 PNG -->
+  <link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=2">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/theme.js"></script>
+<script src="js/brand.js" defer></script>
+</head>
+<body>
+  <div class="content">
+    <div class="card form-card">
+      <header>
+        <h2>注册 / 设置密码</h2>
+      </header>
+
+      <div class="alert info">
+        仅当填写的信息与管理员 / 运维者在服务端<b>预置</b>的账号完全一致时才能设置密码；
+        密码被管理员清除后，也在此页重新设置。<b>注册必须通过邮箱验证码验证，未通过验证的账号无法登录。</b>
+      </div>
+
+      <div id="msg"></div>
+
+      <form id="regForm" autocomplete="off">
+        <div class="field">
+          <label for="real_name">姓名</label>
+          <input id="real_name" placeholder="与服务端登记一致" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="identity">身份</label>
+          <select id="identity">
+            <option value="" disabled selected hidden>请选择身份</option>
+            <option value="普通学生">普通学生</option>
+            <option value="班委">班委</option>
+            <option value="小班主任">小班主任</option>
+            <option value="辅导员">辅导员</option>
+            <option value="运维者">运维者</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="student_id">学号</label>
+          <input id="student_id" placeholder="请输入学号" autocomplete="off">
+          <span class="hint">模板 请输入学号；运维者 / 管理员账号忽略学号（自动置灰不可填）</span>
+        </div>
+        <div class="field">
+          <label for="email">邮箱（必填）</label>
+          <div class="row btn-row">
+            <input id="email" type="email" class="grow" placeholder="请输入邮箱地址（必填）" autocomplete="off">
+            <button class="btn" type="button" id="sendCodeBtn">获取验证码</button>
+          </div>
+          <span class="hint">必填。用于接收重要通知与「忘记密码 → 邮箱验证码」自助重置；管理端 / 开发端不可见</span>
+        </div>
+        <div class="field">
+          <label for="code">邮箱验证码</label>
+          <input id="code" inputmode="numeric" placeholder="请输入邮箱收到的 6 位验证码" autocomplete="one-time-code">
+          <span class="hint" id="codeHint">先点击上方「获取验证码」并查收邮件（10 分钟内有效），填入后提交；<b>未通过验证无法登录</b></span>
+        </div>
+        <div class="field">
+          <label for="password">设置密码</label>
+          <input id="password" type="password" placeholder="至少 6 位，含字母和数字" autocomplete="new-password" name="__off_pwd">
+          <span class="hint">密码需<b>至少 6 位</b>，且<b>同时包含字母和数字</b>，不能纯数字；建议大小写 + 数字组合。</span>
+          <div class="pwd-strength" id="pwdStrength" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div class="pwd-strength-tip muted" id="pwdTip"></div>
+        </div>
+        <div class="field">
+          <label for="confirm">确认密码</label>
+          <input id="confirm" type="password" placeholder="再次输入密码" autocomplete="new-password" name="__off_pwd2">
+        </div>
+        <div class="row" style="gap:18px;margin:6px 0 2px">
+          <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:400; color:var(--text)">
+            <input type="checkbox" id="savePwd" style="width:auto"> 保存密码
+          </label>
+          <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:400; color:var(--text)">
+            <input type="checkbox" id="autoLogin" style="width:auto"> 自动登录
+          </label>
+        </div>
+        <span class="muted" style="font-size:12px;line-height:1.7">保存密码仅存于本机浏览器，便于快速登录；勾选「自动登录」后，本机下次打开系统将自动进入（仍受同端单会话限制）。</span>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="agreePrivacy" disabled style="width:auto">
+            <span>我已阅读并同意 <a href="privacy.html" target="_blank" id="privacyLink">《隐私政策》</a></span>
+          </label>
+          <span class="muted" style="font-size:12px;line-height:1.7" id="privacyHint">请先阅读《隐私政策》（本页弹窗），阅读至底部后即可勾选并注册</span>
+        </div>
+        <button class="btn primary block big" type="submit" id="submitBtn" disabled>确认设置</button>
+      </form>
+
+      <div class="row" style="margin-top:14px">
+        <a href="login.html">返回登录</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手机端：隐私政策弹窗（滚动到底才算读完） -->
+  <div id="privacyModal" class="modal-mask hidden" data-noscroll>
+    <div class="modal">
+      <h3>隐私政策</h3>
+      <div id="pmBox" style="white-space:pre-wrap;line-height:1.8;font-size:14px;max-height:56vh;overflow:auto;border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface-2)">加载中…</div>
+      <div class="muted" id="pmHint" style="font-size:12px;margin-top:8px">↓ 请向下滚动阅读至底部</div>
+      <div class="row end" style="gap:8px">
+        <button class="btn primary" id="pmDone" type="button" disabled>我已阅读完</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/register.js"></script>
+</body>
+</html>
