@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>favicon 预览（验证透明圆角）</title>
+<style>
+  body { font-family: system-ui, "Microsoft YaHei", sans-serif; background:#f5f6f8; color:#222; margin:0; padding:32px; }
+  h1 { font-size:18px; }
+  .row { display:flex; flex-wrap:wrap; gap:24px; margin:16px 0; align-items:flex-end; }
+  .card { text-align:center; }
+  .card span { display:block; font-size:12px; color:#666; margin-top:6px; }
+  .bg-white { background:#fff; }
+  .bg-dark { background:#1f2937; }
+  .bg-check {
+    background-image:
+      linear-gradient(45deg,#ccc 25%,transparent 25%),
+      linear-gradient(-45deg,#ccc 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#ccc 75%),
+      linear-gradient(-45deg,transparent 75%,#ccc 75%);
+    background-size:16px 16px;
+    background-position:0 0,0 8px,8px -8px,-8px 0;
+    background-color:#fff;
+  }
+  .box { padding:14px; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.1); display:inline-block; }
+  .note { background:#fff; padding:14px 18px; border-radius:10px; line-height:1.7; max-width:760px; }
+  code { background:#eef; padding:1px 5px; border-radius:4px; }
+</style>
+</head>
+<body>
+  <h1>favicon 透明圆角验证预览</h1>
+  <div class="note">
+    Windows 资源管理器的缩略图不支持 PNG/ICO 的 alpha 透明，会把透明圆角画成<b>黑色</b>——
+    这是 Windows 缩略图引擎的限制，<b>不是 favicon 文件的问题</b>。
+    下方在支持 alpha 的浏览器里展示，可看到四角圆润且背景透出，文件正确。
+  </div>
+
+  <h3>白底</h3>
+  <div class="row">
+    <div class="box bg-white"><img src="favicon.png" width="16" height="16"></div>
+    <div class="box bg-white"><img src="favicon.png" width="32" height="32"></div>
+    <div class="box bg-white"><img src="favicon.png" width="64" height="64"></div>
+    <div class="card"><span>favicon.png</span></div>
+  </div>
+
+  <h3>深灰底</h3>
+  <div class="row">
+    <div class="box bg-dark"><img src="favicon.png" width="16" height="16"></div>
+    <div class="box bg-dark"><img src="favicon.png" width="32" height="32"></div>
+    <div class="box bg-dark"><img src="favicon.png" width="64" height="64"></div>
+    <div class="card"><span>favicon.png（深色背景也能看清圆角）</span></div>
+  </div>
+
+  <h3>棋盘底（透明区域显示灰白格）</h3>
+  <div class="row">
+    <div class="box bg-check"><img src="favicon.png" width="64" height="64"></div>
+    <div class="card"><span>圆角外的四角是透明的（棋盘格透出）</span></div>
+  </div>
+
+  <h3>favicon.ico（同款）</h3>
+  <div class="row">
+    <div class="box bg-white"><img src="favicon.ico" width="32" height="32"></div>
+    <div class="box bg-dark"><img src="favicon.ico" width="32" height="32"></div>
+  </div>
+</body>
+</html>
