@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理端使用说明书 · 班级签到系统</title>
+<style>
+  :root { --brand:#1A4FA8; --brand-d:#163E85; --ink:#1F2329; --sub:#5B6168; --line:#C9DDF5; --bg:#F5F6F8; }
+  * { box-sizing: border-box; }
+
+  /* 分页：内容自然流动（不强制每节换页，避免大段空白）。
+     页码只由 tools/build-pdf.cjs 的页脚模板输出；此处不再声明 @bottom-center，
+     否则 Chromium 的 @page 边距框会与它叠在同一位置（两行页码重叠）。 */
+  @page { size: A4; margin: 15mm 15mm 18mm 15mm; }
+  @page :first { margin: 0; }   /* 封面整幅铺满 */
+
+  body { margin:0; font-family: "Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif; color:var(--ink); background:#fff; line-height:1.75; font-size:10.5pt; }
+  h1 { font-size: 22pt; margin: 0 0 6px; color: var(--brand-d); }
+  h2 { font-size: 15pt; color: var(--brand-d); border-bottom: 3px solid var(--brand); padding-bottom: 5px; margin: 20px 0 12px; break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+  h3 { font-size: 12pt; color: var(--brand-d); margin: 14px 0 6px; break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+  /* 排版约束（三册一致）：
+     ① 标题禁止落在页尾 —— 标题与其后第一个块绑定，放不下就整体下移；
+     ② 结尾禁止落在页首 —— 段落/列表尽量不脱离前文从新页顶部开始；
+     ③ 段首/段尾至少留 2 行，避免孤字行。 */
+  h2 + *, h3 + * { break-before: avoid; page-break-before: avoid; }
+  ul, ol { break-before: avoid; page-break-before: avoid; }
+  p, li { orphans: 2; widows: 2; }
+  p { margin: 7px 0; }
+  ul, ol { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; page-break-inside: avoid; break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #EAF1FB; color: var(--brand-d); }
+  code { background:#EEF2F8; color:#163E85; padding:1px 4px; border-radius:3px; font-size:9.5pt; font-family: Consolas, Menlo, monospace; }
+  .note { background:#EAF1FB; border-left:4px solid var(--brand); padding:8px 12px; color:#163E85; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+  .warn { background:#FDEFE6; border-left:4px solid #F59E0B; padding:8px 12px; color:#8a4b1b; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+  .tip  { background:#EAF9F3; border-left:4px solid #16A34A; padding:8px 12px; color:#12603a; border-radius:4px; margin:10px 0; page-break-inside: avoid; break-inside: avoid; }
+
+  /* 截图：整图缩放，不跨页裁切；① 与上下文同页（break-before:avoid）避免图片单独成页；
+     ② 限高 165mm，给标题/段落留出同行空间，长截图也不会吃满整页。 */
+  .shot { margin:10px 0; break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; }
+  .shot img { display:block; width:auto; height:auto; max-width:100%; max-height:165mm; margin:0 auto; break-inside: avoid; break-after: avoid; page-break-after: avoid; }
+  .shot .cap { font-size:9pt; color:var(--sub); padding:6px 10px; border-top:1px solid var(--line); background:#FAFBFC; text-align:center; break-before: avoid; page-break-before: avoid; }
+  .shot.two { display:grid; grid-template-columns:1fr 1fr; gap:10px; border:none; overflow:visible; break-inside: avoid; page-break-inside: avoid; }
+  .shot.two figure { margin:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; break-inside: avoid; page-break-inside: avoid; }
+  .shot.two .cap { border-top:1px solid var(--line); }
+
+  .cover { width:100%; height:297mm; box-sizing:border-box; background:linear-gradient(165deg,#0E2747 0%,#163E85 100%); color:#fff; page-break-after:always; break-after: page; display:flex; flex-direction:column; padding:26mm 22mm 22mm; }
+  .cover .wordmark { font-size:12pt; letter-spacing:6px; opacity:0.78; }
+  .cover .mid { margin:auto 0; }
+  .cover h1 { font-size:34pt; font-weight:800; letter-spacing:2px; margin:0; line-height:1.14; color:#fff; }
+  .cover .sub { margin-top:10mm; font-size:13pt; opacity:0.9; letter-spacing:1px; }
+  .cover .rule { width:64px; height:4px; background:#5B9BFF; border-radius:2px; margin:8mm 0; }
+  .cover .foot { padding-top:10mm; border-top:1px solid rgba(255,255,255,0.22); display:flex; justify-content:space-between; align-items:baseline; font-size:10pt; opacity:0.82; letter-spacing:0.5px; }
+
+  .backcover { width:100%; height:297mm; box-sizing:border-box; page-break-before:always; break-before: page; background:linear-gradient(165deg,#0E2747 0%,#163E85 100%); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:30mm 24mm; }
+  .backcover .bc-logo { width:54px; height:54px; border-radius:15px; background:rgba(255,255,255,.16); display:grid; place-items:center; font-size:22px; font-weight:800; margin-bottom:14px; }
+  .backcover .bc-name { font-size:20pt; font-weight:800; letter-spacing:2px; }
+  .backcover .bc-slogan { margin-top:6mm; font-size:11.5pt; opacity:.88; line-height:2; }
+  .backcover .bc-line { margin-top:16mm; padding-top:8mm; border-top:1px solid rgba(255,255,255,.24); font-size:9.5pt; opacity:.8; line-height:1.95; }
+  /* 正文末尾不再放版权行：它与页脚页码重复，且会在正文最后一页单独占位（结尾落到页首）。 */
+  a { color: var(--brand); }
+</style>
+</head>
+<body>
+  <section class="cover">
+    <div class="wordmark">班级签到系统</div>
+    <div class="mid">
+      <h1>管理端<br>使用说明书</h1>
+      <div class="rule"></div>
+      <div class="sub">面向辅导员 / 小班主任 / 班委：发布活动 · 审核申请 · 管理考勤</div>
+    </div>
+    <div class="foot"><span>作者：余子晨（Yushichadao）</span><span>v{{VERSION}} · {{DATE}}</span></div>
+  </section>
+
+  <h2>1. 登录与管理员角色</h2>
+  <p>管理端按<b>管理级别</b>划分职责，级别决定裁决权与可见范围。登录方式与用户端一致（姓名 + 身份 + 学号 + 密码）。</p>
+  <table>
+    <tr><th>角色</th><th>级别</th><th>主要职责</th><th>审批权</th></tr>
+    <tr><td>辅导员</td><td>3（最高）</td><td>全局管理：发布活动、账号与权限、系统安全、终审</td><td>终审</td></tr>
+    <tr><td>小班主任</td><td>2</td><td>班级日常管理、初审、发布活动</td><td>初审 / 终审（范围内）</td></tr>
+    <tr><td>班委</td><td>1</td><td>协助考勤、执行考勤复核、部分初审</td><td>初审</td></tr>
+  </table>
+  <div class="note">裁决采用<b>两级制</b>：初审由本级管理员裁决；被裁决人不服可申诉，进入上级管理员<b>终审</b>；终审后结果锁定，仍可再申诉一次进入更高一级。</div>
+  <div class="shot"><img src="manual-shots/mgr-dashboard.png" alt="管理端工作台" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 1-1　管理端工作台（今日活动 · 数据概览 · 待办）</div></div>
+
+  <h2>2. 发布活动</h2>
+  <p>「发布活动」用于创建考勤活动。支持<b>单次活动</b>与<b>长期活动</b>（长期活动可拆分多个子活动并按周重复），并可绑定<b>活动范围</b>、设置签到规则与备注。</p>
+  <h3>2.1 关键字段</h3>
+  <table>
+    <tr><th>字段</th><th>说明</th></tr>
+    <tr><td>名称 / 地点 / 备注</td><td>展示给成员；备注用于补充说明（如迟到要求）。</td></tr>
+    <tr><td>开始 / 结束时间</td><td>活动的时间范围；长期活动可设置重复规则。</td></tr>
+    <tr><td>签到规则</td><td>可选「活动结束前有效（before_end）」等策略，决定签到窗口的判定方式。</td></tr>
+    <tr><td>时间偏移</td><td>窗口相对活动时间的偏移分钟数（如提前 30 分钟开窗）。</td></tr>
+    <tr><td>活动范围</td><td>绑定已绘制的围栏；启用范围核验时用于比对签到位置。</td></tr>
+  </table>
+  <div class="shot"><img src="manual-shots/mgr-publish.png" alt="发布活动" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 2-1　发布活动（单次 / 长期 / 重复 / 范围 / 规则）</div></div>
+  <div class="tip">签到窗口由服务端统一计算，客户端时间不作数；发布前请确认时间与规则无误。</div>
+
+  <h2>3. 活动管理</h2>
+  <p>「活动」页列出全部活动，可查看/编辑、查看参与统计（签到、在途、请假、缺勤人数）、结束或删除活动，并可核对活动范围与备注。</p>
+  <div class="shot"><img src="manual-shots/mgr-activity.png" alt="活动管理" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 3-1　活动管理与统计</div></div>
+
+  <h2>4. 活动范围</h2>
+  <p>「活动范围」可在地图上绘制多边形围栏，用于签到时的范围核验与位置查看。支持手动绘制与批量导入，可命名、编辑、删除。</p>
+  <div class="shot"><img src="manual-shots/mgr-fences.png" alt="活动范围" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 4-1　活动范围列表</div></div>
+  <div class="shot"><img src="manual-shots/mgr-fence-editor.png" alt="范围编辑器" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 4-2　范围编辑器（绘制 / 编辑多边形）</div></div>
+  <div class="note">坐标以 GCJ-02 存储；若与地图存在系统偏差，可在创建时使用偏移校正。范围核验<b>不阻断签到</b>，结果仅作参考。</div>
+
+  <h2>5. 班级签到（花名册）</h2>
+  <p>「班级签到」以花名册形式展示某场活动的全员状态，可筛选、检索、<b>手工补录 / 更正</b>签到，查看已签到成员的定位，并导出考勤表。</p>
+  <ul>
+    <li>按活动查看：签到 / 在途 / 请假 / 缺勤 一目了然；</li>
+    <li>手工补录：为漏签成员补记签到（会留痕，记录操作人）；</li>
+    <li>查看定位：对已授权定位的签到，可在活动范围地图上查看其位置；</li>
+    <li>导出：导出为表格用于归档。</li>
+  </ul>
+  <div class="shot"><img src="manual-shots/mgr-roster.png" alt="班级签到" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 5-1　班级签到花名册（补录 / 筛选 / 导出）</div></div>
+
+  <h2>6. 审核中心</h2>
+  <p>「审核」集中处理请假、补签、退签与申诉。初审由本级裁决，可选「通过 / 驳回 / 退回修改」并填写回复；申诉进入上级终审。</p>
+  <table>
+    <tr><th>操作</th><th>说明</th></tr>
+    <tr><td>通过</td><td>计入请假 / 补记签到，并通知申请人。</td></tr>
+    <tr><td>驳回</td><td>驳回申请并附理由，申请人可申诉。</td></tr>
+    <tr><td>退回修改</td><td>退回申请人补充材料后重新提交。</td></tr>
+    <tr><td>终审</td><td>对申诉作出最终裁决，结果锁定（仍可再申诉一次）。</td></tr>
+  </table>
+  <div class="shot"><img src="manual-shots/mgr-review.png" alt="审核中心" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 6-1　审核中心（请假 / 补签 / 申诉）</div></div>
+
+  <h2>7. 账号管理</h2>
+  <p>「账号管理」用于查看本范围内账号、授予/收回权限与作用域、重置密码、协助注销等。权限按作用域（scope）下发，避免越权。</p>
+  <div class="shot"><img src="manual-shots/mgr-accounts.png" alt="账号管理" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 7-1　账号管理（权限 / 作用域 / 重置）</div></div>
+  <div class="warn">重置他人密码、修改权限等敏感操作均会写入数据流审计，请谨慎操作。</div>
+
+  <h2>8. 日历报告</h2>
+  <p>「日历报告」以日历与统计形式呈现全班出勤情况，可按活动或成员查看，便于汇总与上报。</p>
+  <div class="shot"><img src="manual-shots/mgr-calendar.png" alt="日历报告" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 8-1　全班日历报告</div></div>
+
+  <h2>9. 工单与通知</h2>
+  <h3>9.1 工单</h3>
+  <p>「工单」处理成员提交的权限/信息类申请（如查看数据流、更正姓名等），可批准、驳回或回复。</p>
+  <div class="shot"><img src="manual-shots/mgr-workorders.png" alt="工单" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 9-1　工单处理</div></div>
+  <h3>9.2 通知</h3>
+  <p>「通知」可向成员发布站内信 / 邮件通知，支持选择通知对象与渠道。</p>
+  <div class="shot"><img src="manual-shots/mgr-notify.png" alt="通知" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 9-2　发布通知</div></div>
+
+  <h2>10. 系统安全</h2>
+  <p>「系统安全」汇总与考勤相关的开关与策略（如活动范围核验、补签开关等）。部分开关受上级（运维端）策略约束。</p>
+  <div class="shot"><img src="manual-shots/mgr-security.png" alt="系统安全" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 10-1　系统安全（开关与策略）</div></div>
+
+  <h2>11. 数据流</h2>
+  <p>「数据流」全量记录系统操作（含管理员操作痕迹），可按分类筛选并导出，用于审计与责任追溯。</p>
+  <div class="shot"><img src="manual-shots/mgr-stream.png" alt="数据流" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 11-1　数据流审计（筛选 / 导出）</div></div>
+
+  <h2>12. 消息中心 · 账号信息 · 登录设备</h2>
+  <div class="shot two">
+    <figure><img src="manual-shots/mgr-msg.png" alt="消息中心" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 12-1　消息中心</div></figure>
+    <figure><img src="manual-shots/mgr-devices.png" alt="登录设备" onerror="this.closest('figure').querySelector('.cap').textContent='配图缺失'; this.style.display='none';"><div class="cap">图 12-2　登录设备</div></figure>
+  </div>
+  <div class="shot"><img src="manual-shots/mgr-accountinfo.png" alt="账号信息" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 12-3　账号信息（安全 / 通知偏好）</div></div>
+
+  <h2>13. 关于与隐私 · 常见问题</h2>
+  <h3>13.1 关于与隐私</h3>
+  <p>「关于系统」查看版本、MIT 许可协议与反馈入口；隐私政策说明个人信息的收集与使用范围。</p>
+  <div class="shot"><img src="manual-shots/mgr-about.png" alt="关于系统" onerror="this.parentNode.querySelector('.cap').textContent='配图缺失：请运行 npm run shots 重新截图'; this.style.display='none';"><div class="cap">图 13-1　关于系统（版本 / 许可 / 反馈）</div></div>
+  <h3>13.2 常见问题</h3>
+  <ul>
+    <li><b>成员无法签到？</b> 检查活动是否在窗口内、规则与偏移是否正确；必要时手工补录。</li>
+    <li><b>定位不在范围？</b> 范围核验不阻断签到；确认围栏绘制与坐标系统是否正确。</li>
+    <li><b>审核该谁处理？</b> 初审由本级处理；申诉的终审由上级管理员完成。</li>
+    <li><b>误操作了？</b> 敏感操作均留痕，可在数据流中核查；请谨慎处理权限与密码类操作。</li>
+  </ul>
+
+  <!-- 正文到此结束。版权信息统一放在封底，避免末页再出现一行重复版权、并多出一张只印这行的空白页。 -->
+
+  <section class="backcover">
+    <div class="bc-logo">签</div>
+    <div class="bc-name">班级签到系统</div>
+    <div class="bc-slogan">开源 · 私有化部署 · 数据自持<br>用户端 · 管理端 · 运维端 三端协同</div>
+    <div class="bc-line">
+      本说明书适用于《班级签到系统》管理端 v{{VERSION}}。<br>
+      软件以 MIT 协议开源发布，可自由使用、二次开发与商用。<br>
+      获取部署包与其它分册：见项目 README 或官网下载页。<br>
+      Copyright © 2026 Yushichadao · 余子晨 版权所有
+    </div>
+  </section>
+</body>
+</html>
