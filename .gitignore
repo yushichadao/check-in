@@ -1,0 +1,13 @@
+node_modules/
+.deps-fix.lock
+data/
+*.log
+*.out
+*.err
+server.out
+server.err
+server.err2
+.env
+.DS_Store
+Thumbs.db
+server/ssl/
