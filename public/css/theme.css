@@ -1,0 +1,392 @@
+/* ===========================================================
+   融合主题：大学风（深蓝金/衬线） + 精美风（玻璃渐变/柔和阴影）
+            + 机械风（网格底纹/等宽数据/精密线条）
+            + 有意思风（弹性动效/明快色块）
+   四风合为一体，不再提供切换
+   =========================================================== */
+
+/* 标题栏专用字体：思源宋体（Noto Serif SC）。
+   不再通过 @import 从境外字体服务（Google Fonts）拉取——那会让每个页面都发起外部请求，
+   国内还常加载失败、卡住首屏。改为纯本地字体栈：装了思源宋体 / Noto Serif SC 就用，
+   没装则回退系统宋体 / 楷体，全程零外部请求。 */
+
+
+:root {
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 22px;
+  --gap: 16px;
+  --maxw: 1240px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-title: "Songti SC", "SimSun", "STSong", Georgia, "Times New Roman", serif;
+  --font-heading: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", "KaiTi", "STKaiti", serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Courier New", monospace;
+
+  /* 大学风主色 */
+  --accent: #1e3a5f;
+  --accent-2: #c8a45c;
+  --accent-ink: #ffffff;
+  /* 机械风点睛 */
+  --accent-3: #22d3ee;
+  /* 有意思风点缀 */
+  --pop: #ff6b6b;
+  --pop-2: #feca57;
+
+  --bg: #eef1f7;
+  --surface: rgba(255, 255, 255, .80);
+  --surface-2: rgba(255, 255, 255, .58);
+  --text: #17202c;
+  --muted: #5f6b7d;
+  --border: rgba(30, 58, 95, .14);
+
+  --ok: #2f9e6f;
+  --warn: #e08a1e;
+  --danger: #d64541;
+  --info: #2f6f9e;
+
+  /* 白天模式页面底纹：机械风精密网格 + 精美风柔和光晕。
+     单独抽成变量，夜间模式整体替换即可（body 里只写 background-image: var(--page-bg)）。 */
+  --page-bg:
+    linear-gradient(rgba(30, 58, 95, .045) 1px, transparent 1px) 0 0 / 100% 30px,
+    linear-gradient(90deg, rgba(30, 58, 95, .045) 1px, transparent 1px) 0 0 / 30px 100%,
+    radial-gradient(900px 460px at 6% -8%, rgba(200, 164, 92, .18) 0%, transparent 60%),
+    radial-gradient(880px 460px at 100% 0%, rgba(34, 211, 238, .14) 0%, transparent 58%),
+    radial-gradient(760px 420px at 50% 100%, rgba(99, 102, 241, .12) 0%, transparent 62%);
+
+  /* 原生控件（下拉列表、日期 / 时间选择器、复选框、滚动条等）由浏览器绘制，
+     明确声明浅色，夜间模式再整体改声明，避免夜里出现白底 + 立体描边的默认样式 */
+  color-scheme: light;
+  /* 表单控件实心底色：仅供自动填充、下拉列表项等「必须不透明」的场合，普通输入框仍用 --surface-2 */
+  --field-bg: #f6f8fb;
+
+  --shadow: none;
+  --shadow-lg: none;
+
+  --nav-bg:
+    linear-gradient(180deg, #1e3a5f 0%, #16304f 100%);
+  /* 导航底色的「实心近似色」：渐变不能当颜色用（box-shadow / border 等），需要纯色时取它 */
+  --nav-solid: #1e3a5f;
+  --nav-text: #e9eff7;
+  --nav-active: rgba(200, 164, 92, .24);
+  --nav-accent: #c8a45c;
+
+  --transition: .2s cubic-bezier(.34, 1.4, .64, 1);
+}
+
+/* ============================ 夜间模式 ============================
+   只换肤、不改版式：白天 / 夜间共用同一套版式与组件结构，这里仅覆盖配色变量，
+   并对少量写死浅色的组件（顶栏、表头、浮窗标题栏、标签等）逐一点名适配，避免夜间出现刺眼白块。
+   由 public/js/theme.js 在 <html> 上写 data-mode="dark" 启用，选择记在 localStorage。 */
+/* 选择器不绑定在 <html> 上：任何带 data-mode="dark" 的元素及其子树都会变暗，
+   这样既能整页切夜间（theme.js 写在 <html> 上），也能在一个容器里局部预览夜间配色。 */
+:root[data-mode="dark"],
+[data-mode="dark"] {
+  /* 让浏览器绘制的原生控件（下拉列表 / 日期时间选择器 / 复选框 / 滚动条 / 表单默认底色）
+     一并转为深色，杜绝「夜间出现白底立体控件」 */
+  color-scheme: dark;
+  --field-bg: #232b38;
+
+  /* 主色提亮：深底上仍是可辨识的「大学蓝」，且白字对比度足够 */
+  --accent: #4a7ab5;
+  --accent-2: #d8b877;
+  --accent-3: #4fd8ee;
+  --accent-ink: #ffffff;
+
+  --bg: #0f141b;
+  /* 卡片 / 浮窗 / 顶栏 / 表头统一用同一个实心底色：
+     白天它们都是白（同一档），夜间就必须只有一个深色，而不是「一块蓝、一块黑」。
+     实心（非半透明）可以避免相互叠加后深浅不一。 */
+  --surface: #1b2230;
+  --surface-2: rgba(255, 255, 255, .06);
+  /* 供 var(--card-bg, #fff) 一类的回退取值 */
+  --card-bg: #1b2230;
+  --text: #e7edf6;
+  --muted: #9db0c7;
+  --border: rgba(255, 255, 255, .10);
+
+  --ok: #46b884;
+  --warn: #e8a33c;
+  --danger: #e0655f;
+  --info: #5b9dd1;
+
+  /* 侧栏导航：与卡片同一色系、只压暗一档（白天它同样是「深一档」的导航色，而不是纯黑） */
+  --nav-bg: linear-gradient(180deg, #18202c 0%, #141b25 100%);
+  --nav-solid: #18202c;
+  --nav-text: #dae4f1;
+  --nav-active: rgba(200, 164, 92, .26);
+  --nav-accent: #d8b877;
+
+  /* 夜间底纹：网格改用极淡的白色、光晕整体压暗，保留层次但不刺眼 */
+  --page-bg:
+    linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 100% 30px,
+    linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 30px 100%,
+    radial-gradient(900px 460px at 6% -8%, rgba(200, 164, 92, .10) 0%, transparent 60%),
+    radial-gradient(880px 460px at 100% 0%, rgba(34, 211, 238, .08) 0%, transparent 58%),
+    radial-gradient(760px 420px at 50% 100%, rgba(99, 102, 241, .07) 0%, transparent 62%);
+}
+
+/* 卡片 / 顶栏 / 表头 / 浮窗标题栏 / 地图容器一律取同一个 --surface，
+   并且不再叠任何高光渐变或亮边：夜间与白天一样是「一整片同色」，不显立体 */
+[data-mode="dark"] .card { background-image: none; }
+[data-mode="dark"] .topbar { background: var(--surface); border-bottom-color: rgba(255, 255, 255, .07); }
+[data-mode="dark"] th { background: var(--surface); }
+[data-mode="dark"] .modal-head { background: var(--surface); border-bottom-color: rgba(255, 255, 255, .07); }
+[data-mode="dark"] .fence-map { background: var(--surface); }
+/* 侧栏当前项：去掉描边，保持与白天一致的「纯背景高亮」 */
+[data-mode="dark"] .nav-item.active { box-shadow: none; border-color: transparent; }
+[data-mode="dark"] .legend { color: var(--muted); }
+/* 高危确认文字（琥珀底） */
+[data-mode="dark"] .confirm-text {
+  background: rgba(232, 163, 60, .12);
+  border-color: rgba(232, 163, 60, .45);
+  color: #f0c78a;
+}
+/* 维护横幅（琥珀系） */
+[data-mode="dark"] .maint-top-banner { background: #2a2317; border-bottom-color: #4a3c22; color: #e8d7b6; }
+[data-mode="dark"] .maint-top-banner .m-banner-title { color: #f5e6c8; }
+[data-mode="dark"] .maint-top-banner .m-banner-msg,
+[data-mode="dark"] .maint-top-banner .m-banner-foot { color: #d8c49d; }
+[data-mode="dark"] .maint-top-banner .m-banner-meta {
+  background: rgba(232, 163, 60, .14);
+  border-color: rgba(232, 163, 60, .34);
+  color: #e8c88c;
+}
+/* 维护中全屏遮罩 */
+[data-mode="dark"] .maintenance-overlay { background: var(--bg); }
+/* 关于系统 / 页脚：白天用的是写死的深灰蓝，夜间换成同一语义的浅色（值比标签更亮，层次不倒置） */
+[data-mode="dark"] .about-intro,
+[data-mode="dark"] .about-footer-copy { color: #b9c6d6; }
+[data-mode="dark"] .beian-link { color: var(--info); border-bottom-color: var(--info); }
+[data-mode="dark"] .beian-link:hover { color: #8fc6f0; border-bottom-color: #8fc6f0; }
+/* 消息中心的层级小胶囊：浅色底在夜间改为同色系深色底 */
+[data-mode="dark"] .nt-lv.urgent { background: rgba(224, 101, 95, .16); color: #f3a49f; }
+[data-mode="dark"] .nt-lv.notice { background: rgba(232, 163, 60, .16); color: #f0c78a; }
+[data-mode="dark"] .nt-lv.info { background: rgba(255, 255, 255, .08); }
+/* 数据流分类标签：浅色底 → 同色系深色底 + 亮字，可辨识且不刺眼。
+   用静态 rgba 兜底：旧版 Safari（< 16.2）不支持 color-mix，会丢掉标签底色 */
+[data-mode="dark"] .tag.ev-ok   { background: rgba(70, 184, 132, .16); color: #7fe0ab; }
+[data-mode="dark"] .tag.ev-warn { background: rgba(224, 101, 95, .16); color: #f3a49f; }
+[data-mode="dark"] .tag.ev-info { background: rgba(91, 157, 209, .16); color: #8fc6f0; }
+[data-mode="dark"] .tag.ev-act  { background: rgba(232, 163, 60, .16); color: #f0c78a; }
+[data-mode="dark"] .tag.ev-usr  { background: rgba(155, 133, 255, .16); color: #c3b2ff; }
+[data-mode="dark"] .tag.ev-auth,
+[data-mode="dark"] .tag.ev-def  { background: rgba(255, 255, 255, .08); color: #b9c6d6; }
+
+/* ======================= 原生控件的主题跟随 =======================
+   下拉列表、日期 / 时间面板、复选框、滚动条等由浏览器绘制，默认是「浅色 + 立体描边」。
+   color-scheme 已让它们整体跟随主题（白天浅、夜间深），下面只处理少数不听话的部分：
+   日历图标、自动填充底色、下拉列表项、内部滚动条、地图控件。
+   取值全部走同一套变量，故白天与夜间是同一套配色关系，只是明暗相反，不会出现「白天一个样、晚上另一个样」。 */
+
+/* 复选框 / 单选框 / 滑块：沿用主题主色 */
+input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: var(--accent); }
+
+/* 下拉列表项：部分浏览器（旧版 Chrome / Firefox）不完全跟随 color-scheme，显式给一次 */
+select option { background: var(--field-bg); color: var(--text); }
+
+/* 自动填充：浏览器会用系统高亮色铺底、盖掉主题底色，用内阴影铺回主题色 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--field-bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* 日历 / 时钟图标：白天与夜间使用**同一套图形**（本项目的线性图标风格），只有颜色不同 ——
+   白天取正文色 #17202c、夜间取 #e7edf6；形状、粗细、尺寸完全一致，不再是「白天一个样、晚上另一个样」。
+   之所以不赌浏览器的 color-scheme（部分版本不会给 UA 图标翻色，表现为夜间仍是深色），直接显式指定底图。 */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: .7;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317202c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2.5'/%3E%3Cpath d='M8 3v4M16 3v4M3.5 10h17'/%3E%3C/svg%3E");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 17px 17px;
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: .7;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317202c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 17px 17px;
+}
+/* 夜间：仅把同一套图形的颜色换成正文浅色 */
+[data-mode="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-mode="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-mode="dark"] input[type="month"]::-webkit-calendar-picker-indicator,
+[data-mode="dark"] input[type="week"]::-webkit-calendar-picker-indicator {
+  opacity: .85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e7edf6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2.5'/%3E%3Cpath d='M8 3v4M16 3v4M3.5 10h17'/%3E%3C/svg%3E");
+}
+[data-mode="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: .85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e7edf6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E");
+}
+/* 数字步进器、搜索清除按钮：同为 UA 绘制的深色字形，夜间反相即「同形状换色」 */
+[data-mode="dark"] input::-webkit-inner-spin-button,
+[data-mode="dark"] input::-webkit-outer-spin-button,
+[data-mode="dark"] input[type="search"]::-webkit-search-cancel-button {
+  filter: invert(1);
+  opacity: .75;
+}
+
+/* ======================= 主题切换过渡 =======================
+   CSS 变量本身无法被过渡，但「使用这些变量的颜色属性」可以。
+   切换瞬间由 JS 给根元素（或预览容器）挂上 .theme-switching，让整棵子树的颜色类属性
+   统一做一次平滑过渡；过渡结束立即移除，避免长期占用元素自身的 transition
+   （例如按钮 hover 的抬升动效）。夜间 / 白天来回切都走同一条路径。 */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: background-color .32s ease, color .32s ease, border-color .32s ease,
+              fill .32s ease, stroke .32s ease, box-shadow .32s ease !important;
+}
+/* 系统开启「减少动态效果」时不做过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .theme-switching,
+  .theme-switching *,
+  .theme-switching *::before,
+  .theme-switching *::after { transition: none !important; }
+}
+
+/* 地图控件（缩放按钮 / 归属信息 / 气泡）：默认白底，夜间同样跟随主题，且去掉立体投影 */
+[data-mode="dark"] .leaflet-bar { box-shadow: none; }
+[data-mode="dark"] .leaflet-bar a { background: var(--surface); color: var(--text); border-bottom-color: rgba(255, 255, 255, .07); }
+[data-mode="dark"] .leaflet-bar a:hover { background: #242e3d; color: var(--text); }
+[data-mode="dark"] .leaflet-control-attribution { background: rgba(15, 20, 27, .82); color: var(--muted); }
+[data-mode="dark"] .leaflet-control-attribution a { color: var(--info); }
+[data-mode="dark"] .leaflet-popup-content-wrapper,
+[data-mode="dark"] .leaflet-popup-tip { background: var(--surface); color: var(--text); }
+
+/* ============================ 基础 ============================ */
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; min-height: 100%; }
+
+/* 页面主滚动条：去掉丑陋的竖直滑动条（滚动功能保留，仅隐藏滚动条本身）。
+   注意：这里只作用于根滚动容器，表格 / 数据流等内部滚动区域不受影响。 */
+html {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / 旧 Edge */
+}
+html::-webkit-scrollbar { width: 0; height: 0; display: none; }  /* Chrome / Safari */
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--bg);
+  background-image: var(--page-bg);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+  margin: 0 0 10px;
+  line-height: 1.3;
+  letter-spacing: .4px;
+  font-variant-numeric: tabular-nums;   /* 标题中的阿拉伯数字等宽对齐 */
+  font-feature-settings: "tnum" 1;
+}
+
+h1 { font-size: 22px; }
+h2 { font-size: 19px; }
+h3 { font-size: 16px; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+p { margin: 0 0 10px; }
+small, .muted { color: var(--muted); }
+
+code, .mono { font-family: var(--font-mono); font-size: 13px; }
+
+/* 机械风：数字与编号统一等宽 */
+.num, .stat .num, th, .badge, .tag, .cal-head { font-family: var(--font-mono); }
+
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+/* 大学风：标题下的金色细线 */
+.card > header h2, .card > header h3 {
+  position: relative;
+  padding-left: 12px;
+}
+.card > header h2::before, .card > header h3::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 12%;
+  width: 4px; height: 76%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--accent-2), var(--accent-3));
+}
+
+/* 表格横向滚动提示 */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* 隐藏非关键列 */
+  .col-optional {
+    display: none;
+  }
+}
+
+/* ========== 活动列表工具栏布局 ========== */
+.act-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+.act-stats {
+  font-size: 12px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+@media (max-width: 768px) {
+  .act-controls { gap: 6px 8px; }
+  .act-stats { flex: 1 1 100%; margin-left: 0; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .col-optional { display: none; }
+}
+
+/* ========== 活动列表工具栏布局 ========== */
+.act-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+.act-stats {
+  font-size: 12px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+@media (max-width: 768px) {
+  .act-controls { gap: 6px 8px; }
+  .act-stats { flex: 1 1 100%; margin-left: 0; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .col-optional { display: none; }
+}
