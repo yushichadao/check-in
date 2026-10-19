@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>主题预览 · 白天 / 夜间（班级签到系统）</title>
+  <!-- 站点图标：现代浏览器用 SVG，其余回退 PNG -->
+  <link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=2">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    /* 本页样式只用于「并排对照」，不属于主题本身：
+       两侧使用完全相同的 HTML（右侧由脚本克隆），唯一差别是容器上的 data-mode。 */
+    html, body { background: #dde3ec; }
+    .demo-page { max-width: 1360px; margin: 0 auto; padding: 26px 18px 60px; }
+    .demo-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .demo-head h1 { margin: 0; }
+    .demo-lead { color: #46536a; font-size: 13px; line-height: 1.8; margin: 6px 0 20px; }
+    .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 1000px) { .demo-grid { grid-template-columns: 1fr; } }
+
+    .panel { border-radius: 18px; overflow: hidden; border: 1px solid rgba(30, 58, 95, .18); box-shadow: 0 8px 22px rgba(15, 23, 42, .10); }
+    .panel > .cap {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 14px; font-size: 12px; font-weight: 700; letter-spacing: .5px;
+      background: rgba(15, 23, 42, .07); color: #334155;
+    }
+    .panel > .cap .ico { width: 15px; height: 15px; display: block; }
+    /* 舞台：两侧都吃各自作用域内的 --bg / --page-bg，故背景与整站完全一致 */
+    .stage { background-color: var(--bg); background-image: var(--page-bg); color: var(--text); padding: 14px; }
+    /* 顶栏按真实形态平铺（不圆角、不描边），否则会被看成「浮起来的一块」 */
+    .stage .topbar { position: static; border-radius: 0; margin-bottom: 12px; }
+
+    .demo-row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .mini-sidebar {
+      flex: 0 0 148px; background: var(--nav-bg); color: var(--nav-text);
+      border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .mini-sidebar .nav-item { font-size: 13px; padding: 8px 10px; }
+    .mini-sidebar .nav-item.active { color: var(--nav-text); font-weight: 700; }
+    .demo-col { flex: 1 1 320px; min-width: 0; }
+
+    .swatch { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .swatch i { display: block; width: 40px; height: 22px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, .12); }
+    .demo-note {
+      margin-top: 22px; padding: 14px 16px; border-radius: 14px;
+      background: #fff; border: 1px solid rgba(30, 58, 95, .14);
+      color: #46536a; font-size: 13px; line-height: 1.9;
+    }
+    .demo-note b { color: #1e3a5f; }
+  </style>
+<script src="js/brand.js" defer></script>
+</head>
+<body>
+  <!-- 图标精灵：本页仅用到太阳 / 月亮（与系统内同一款线性图标） -->
+  <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true" focusable="false">
+    <symbol id="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+    <symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  </svg>
+
+  <div class="demo-page">
+    <div class="demo-head">
+      <h1>主题预览 · 白天 / 夜间</h1>
+      <span class="muted" style="font-size:12px">同一套 CSS 变量，仅切换 <code class="mono">data-mode</code></span>
+    </div>
+    <p class="demo-lead">
+      上方「切换演示」可来回切换、观察明暗过渡；下方为并排对照。
+      两侧内容完全一致（右侧由左侧克隆），因此差异 <b>只来自配色</b>，不含版式或组件结构变化。
+      依次为：顶栏、侧边导航、卡片与按钮组、表单与原生控件、数据流表格与分类标签、浮窗标题栏，以及主色 / 语义色取样。
+    </p>
+
+    <!-- 切换演示：单块预览 + 切换按钮，与系统内切换走同一套过渡机制 -->
+    <section class="panel" style="margin-bottom:18px">
+      <div class="cap">
+        <span>切换演示：点右侧按钮，看白天 ↔ 夜间的过渡</span>
+        <button class="btn sm" id="demoSwitchBtn" type="button" style="margin-left:auto">切换到夜间</button>
+      </div>
+      <div class="stage" id="stageSwitch" data-mode="light"></div>
+    </section>
+
+    <div class="demo-grid">
+      <!-- ======================= 白天 ======================= -->
+      <section class="panel">
+        <div class="cap"><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-sun"></use></svg>白天模式 · data-mode="light"</div>
+        <div class="stage" id="stageLight" data-mode="light">
+          <div class="topbar">
+            <div class="who">张三 · 普通学生</div>
+            <div class="row">
+              <button class="btn sm" type="button">切换账号</button>
+              <button class="btn sm" type="button">登出</button>
+            </div>
+          </div>
+
+          <div class="demo-row">
+            <div class="mini-sidebar">
+              <div class="nav-item active">签到</div>
+              <div class="nav-item">签到记录</div>
+              <div class="nav-item">申诉</div>
+              <div class="nav-item">数据流</div>
+            </div>
+
+            <div class="demo-col">
+              <div class="card" style="margin-bottom:12px">
+                <header><h2>提交申诉</h2><button class="btn sm" type="button">刷新</button></header>
+                <div class="muted" style="font-size:12px;line-height:1.7">
+                  申诉分两类：请假（签到窗口内）与补签（活动结束后缺勤）。审核留言会随邮件发给你。
+                </div>
+                <div class="grid cols-2" style="margin-top:10px">
+                  <div class="field">
+                    <label>活动</label>
+                    <select><option>高等数学（周一 3-4 节）</option><option>大学英语</option></select>
+                  </div>
+                  <div class="field">
+                    <label>申诉类型</label>
+                    <select><option>补签（活动已结束，缺勤）</option><option>请假（签到窗口内）</option></select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>理由</label>
+                  <input value="示例：早高峰公交延误，已到教学楼 A-101">
+                </div>
+                <div class="grid cols-2" style="margin-top:10px">
+                  <div class="field">
+                    <label>日期选择器（原生）</label>
+                    <input type="date" value="2026-09-25">
+                  </div>
+                  <div class="field">
+                    <label>时间选择器（原生）</label>
+                    <input type="time" value="08:30">
+                  </div>
+                </div>
+                <label class="chk" style="margin-top:10px"><input type="checkbox" checked style="width:auto"> 原生控件示例（复选框）</label>
+                <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
+                  <button class="btn primary sm" type="button">提交申诉</button>
+                  <button class="btn ok sm" type="button">通过</button>
+                  <button class="btn danger sm" type="button">驳回</button>
+                  <button class="btn sm" type="button">取消</button>
+                </div>
+                <div class="alert ok" style="margin-top:12px">提示条示例：操作成功。</div>
+              </div>
+
+              <div class="card">
+                <header><h2>数据流（示例）</h2></header>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>时间</th><th>类型</th><th>操作者</th><th>操作内容</th></tr></thead>
+                    <tbody>
+                      <tr><td class="mono">21:30:46</td><td><span class="tag ev-ok">登录</span></td><td>张三</td><td>登录了系统</td></tr>
+                      <tr><td class="mono">21:31:02</td><td><span class="tag ev-act">自动委托管理权限</span></td><td>王旸</td><td>辅导员未激活，自动委托其管理权限给下级</td></tr>
+                      <tr><td class="mono">21:31:30</td><td><span class="tag ev-warn">异地登录</span></td><td>张三</td><td>从异地登录（Android · Chrome）</td></tr>
+                      <tr><td class="mono">21:32:11</td><td><span class="tag ev-info">工单</span></td><td>李班委</td><td>提交了「修改信息」工单</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="muted" style="font-size:12px;margin-top:10px">主色 / 语义色取样：</div>
+                <div class="swatch">
+                  <i style="background: var(--accent)" title="--accent"></i>
+                  <i style="background: var(--accent-2)" title="--accent-2"></i>
+                  <i style="background: var(--accent-3)" title="--accent-3"></i>
+                  <i style="background: var(--ok)" title="--ok"></i>
+                  <i style="background: var(--warn)" title="--warn"></i>
+                  <i style="background: var(--danger)" title="--danger"></i>
+                  <i style="background: var(--info)" title="--info"></i>
+                  <i style="background: var(--surface)" title="--surface"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="modal" style="max-width:none;box-shadow:none">
+              <div class="modal-head"><b>浮窗标题栏示例</b></div>
+              <div class="muted" style="font-size:13px;margin-top:8px">浮窗标题栏为实心色（白天 #fff / 夜间深色），滑动内容时始终盖住正文。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================= 夜间 ======================= -->
+      <section class="panel">
+        <div class="cap"><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-moon"></use></svg>夜间模式 · data-mode="dark"</div>
+        <div class="stage" id="stageDark" data-mode="dark"></div>
+      </section>
+    </div>
+
+    <div class="demo-note">
+      <b>怎么用：</b>系统内每个页面顶栏右侧都有「夜间 / 白天」按钮（月亮 = 当前白天，太阳 = 当前夜间），点击即切换并记住选择；
+      没手动选过时跟随系统深浅色。本页为对照演示，<b>不加载切换逻辑</b>，两侧固定为白天与夜间，便于逐项比较。<br>
+      <b>覆盖范围：</b>底色与底纹、卡片 / 浮窗 / 表格表头、侧边导航、输入框与按钮、分类标签、维护横幅与遮罩，均已按同一套变量适配，不存在刺眼的纯白块。<br>
+      <b>过渡实现：</b>CSS 变量本身不能过渡，但使用它们的颜色属性可以。切换瞬间给根元素（演示页为预览容器）挂上
+      <code class="mono">.theme-switching</code>，让整棵子树的背景 / 文字 / 边框 / 描边做一次 0.32s 过渡，结束即移除；
+      系统开启「减少动态效果」时自动不做过渡。
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var src = document.getElementById('stageLight');
+      var dst = document.getElementById('stageDark');
+      var sw = document.getElementById('stageSwitch');
+      // 右侧夜间面板与上方切换预览都克隆左侧内容，保证只有配色不同
+      if (src && dst) dst.innerHTML = src.innerHTML;
+      if (src && sw) sw.innerHTML = src.innerHTML;
+
+      // 切换演示：先给预览容器挂 .theme-switching（一次性颜色过渡），再改 data-mode，
+      // 过渡结束移除，避免长期占用元素自身的 transition。与系统内切换同一机制。
+      var btn = document.getElementById('demoSwitchBtn');
+      if (sw && btn) {
+        btn.addEventListener('click', function () {
+          var toDark = sw.getAttribute('data-mode') !== 'dark';
+          sw.classList.add('theme-switching');
+          sw.setAttribute('data-mode', toDark ? 'dark' : 'light');
+          btn.textContent = toDark ? '切换到白天' : '切换到夜间';
+          setTimeout(function () { sw.classList.remove('theme-switching'); }, 380);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
