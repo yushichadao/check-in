@@ -1,0 +1,45 @@
+{
+  "name": "class-checkin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "班级签到系统（可部署成品）",
+  "main": "server/index.js",
+  "scripts": {
+    "prestart": "node tools/check-deps.js",
+    "start": "node server/index.js",
+    "verify:deps": "node tools/check-deps.js",
+    "update": "npm ci",
+    "dev": "node --watch server/index.js",
+    "seed": "node server/seed.js",
+    "reset": "node server/seed.js --reset",
+    "factory-reset": "node server/factory-reset.js",
+    "reset-ops": "node tools/reset-ops-password.js",
+    "cleanup:anomalies": "node tools/cleanup-anomalies.js",
+    "mail:preview": "node server/mailpreview.js",
+    "mail:send": "node server/mailpreview.js --send",
+    "config": "node tools/setup-wizard.js",
+    "init": "node tools/init.js",
+    "build:pdf": "node tools/build-pdf.cjs",
+    "shots": "node tools/capture-manual-shots.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "12.11.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.10",
+    "selfsigned": "2.4.1"
+  },
+  "devDependencies": {
+    "pdf-lib": "1.17.1",
+    "playwright": "1.63.0"
+  },
+  "license": "MIT"
+}
