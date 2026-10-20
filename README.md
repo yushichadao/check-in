@@ -39,6 +39,7 @@
 21. [自动代管（缺上级自动补位）](#二十一自动代管缺上级自动补位)
 22. [使用说明书（PDF）](#二十二使用说明书pdf)
 23. [官网宣传页（下载站）与配图 / 说明书构建](#二十三官网宣传页下载站与配图--说明书构建)
+24. [后端 API 接口概览（网页）](#二十四后端-api-接口概览网页)
 
 ---
 
@@ -973,3 +974,204 @@ npm run build:pdf    # 由三册说明书 HTML 生成带封面 / 页码 / 封底
 
 > 说明书与官网共用同一套界面配图。`npm run shots` 会先启动服务、写入**完整演示数据**（活动 / 签到 / 请假 / 补签 / 审核 / 消息 / 工单 / 数据流），
 > 再以演示账号登录三端、逐项切换菜单并**整页截图**（等待数据加载完成、避免「加载中」等异常态），跑完后自动清理演示数据。
+
+## 二十四、后端 API 接口概览（网页）
+
+> 下列接口均由 `server/`（Express）提供；若部署在子路径（如 `/check-in`），
+> 则所有路径前需加该前缀。`BASE` = `cfg.BASE_PATH`，下文路径均为「部署在根」时的写法。
+> 鉴权：除标注「公开」的接口外，其余需在 Cookie 会话内登录后调用；
+> 非 GET 写操作另有同源（Origin/Referer）校验以抵御 CSRF；维护模式下除运维端及白名单接口外一律 503。
+
+### 认证与账号（/api/auth）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/auth/device-key` | 设备识别码（服务器签发） |
+| POST | `/api/auth/login` | 登录 |
+| POST | `/api/auth/check-accounts` | 校验本机记住的账号是否仍存在（登录页自动剪枝用，公开） |
+| POST | `/api/auth/logout` | 登出 |
+| GET | `/api/auth/ping` | 会话心跳（保持在线状态） |
+| GET | `/api/auth/privacy` | 隐私政策（公开：注册页阅读后才能注册） |
+| POST | `/api/auth/account/cancel` | 账号注销（仅隐藏，服务器保留信息） |
+| GET | `/api/auth/me` | 当前登录者（含权限态） |
+| POST | `/api/auth/me/loc-consent` | 定位上传授权：本人自愿开启 / 取消 |
+| POST | `/api/auth/me/clean-mode` | 清爽模式：本人自愿开启 / 关闭 |
+| POST | `/api/auth/me/complete-setup` | 首次设置完成（注册后必须完成才能进入系统） |
+| POST | `/api/auth/me` | 本人资料：姓名 / 学号 / 身份 均为只读，仅由上级在管理端修改 |
+| POST | `/api/auth/register-code` | 注册激活：向填写的邮箱下发验证码 |
+| POST | `/api/auth/set-password` | 设置密码（首次注册激活 / 管理员清除密码后重设，共用） |
+| POST | `/api/auth/change-password` | 修改密码 |
+| POST | `/api/auth/email` | 设置 / 更新本人邮箱（找回密码用） |
+| POST | `/api/auth/pwd-reset-request` | 用户提交找回密码申请 |
+| POST | `/api/auth/email-code` | 找回密码：发送邮箱验证码 |
+| POST | `/api/auth/email-reset` | 找回密码：校验验证码并重置密码 |
+| POST | `/api/auth/reactivate-request` | 已注销账号：提交「重启用」工单申请 |
+
+### 会话管理（/api/sessions）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/sessions/` | 我的登录设备：按设备去重（当前 + 历史设备，每台只留最新） |
+| POST | `/api/sessions/kick` | 下线某台设备（不能下线当前设备） |
+| POST | `/api/sessions/:sid/end` | 按 session_id 精确结束某一台设备的会话（多设备场景：一手机 + 一电 |
+
+### 账号管理 / 管理端（/api/admin）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/admin/users` | 账号列表（按 Scope 收窄） |
+| POST | `/api/admin/users` | 新增账号 |
+| PUT | `/api/admin/users/:id` | 编辑账号基本信息（姓名 / 学号 / 身份） |
+| PUT | `/api/admin/users/:id/role` | 修改账号身份 / 层级（仅运维者） |
+| DELETE | `/api/admin/users/:id` | 清除账号数据（永久删除，需二次验证） |
+| POST | `/api/admin/users/bulk-delete` | 批量清除账号数据（同样需二次验证） |
+| POST | `/api/admin/users/:id/restore` | 恢复已注销（隐藏）的账号 |
+| POST | `/api/admin/users/:id/cancel` | 注销账号（隐藏处理，可由管理端 / 运维者执行） |
+| POST | `/api/admin/users/:id/clear-password` | 清除密码（仅 Scope 内账号 |
+| GET | `/api/admin/pwd-resets` | 待处理的找回密码申请（按 Scope 收窄） |
+
+### 系统设置（/api/settings）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/settings/public` | 普通学生端 / 未登录页可见的公开状态（维护态、隐私与公告文案等） |
+| GET | `/api/settings/` | 读取全部设置 |
+| POST | `/api/settings/basic` | 基础开关（补签 / 旧提醒开关） |
+| POST | `/api/settings/reset-sys` | 恢复班级级设置为出厂默认 |
+| PUT | `/api/settings/notify` | 通知偏好（分层级，必提醒不可取消） |
+| GET | `/api/settings/me/notify` | 个人通知渠道偏好（自服务：任意登录用户改自己的） |
+| PUT | `/api/settings/me/notify` | — |
+| PUT | `/api/settings/location-verify` | 定位核验总开关（需「启动活动范围核验」权限） |
+| PUT | `/api/settings/auto-cover` | 自动代管总开关（仅运维者 |
+| PUT | `/api/settings/manager-location-view` | 管理端定位查看全局开关（仅运维者） |
+| PUT | `/api/settings/maintenance` | 维护模式（排期 / 立即开启 / 运维者结束） |
+| PUT | `/api/settings/privacy` | 隐私告知文案（AUTH_PRIVACY，仅运维者） |
+| PUT | `/api/settings/announcement` | 公告栏（仅运维者） |
+
+### 活动 / 围栏（/api，宽挂载）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/fences` | 活动范围列表 |
+| GET | `/api/activities/:id` | 活动详情（基本信息 + 六态统计 + 签到名单） |
+| GET | `/api/activities` | 活动列表（父子分组） |
+| GET | `/api/current` | 当前/即将开始的活动（不含长期活动） |
+| POST | `/api/activities` | 发布活动 |
+| DELETE | `/api/activities/:id` | — |
+| POST | `/api/activities/bulk-delete` | 批量删除活动 |
+| PUT | `/api/activities/:id` | 编辑活动：已禁止（活动一经发布不可修改） |
+| GET | `/api/activities/:id/image` | — |
+| GET | `/api/activities/:id/image/:idx` | — |
+| PUT | `/api/activities/:id/destination` | 设置 / 清除活动目的地标记 |
+
+### 电子围栏（/api/fences）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/fences/` | 活动范围列表 |
+| GET | `/api/fences/paged` | 活动范围列表（分页） |
+| GET | `/api/fences/:id` | 单条活动范围 |
+| POST | `/api/fences/` | 新建活动范围（一个围栏可含多个多边形范围） |
+| PUT | `/api/fences/:id` | 更新活动范围 |
+| POST | `/api/fences/bulk-update` | 批量编辑（按批） |
+| POST | `/api/fences/bulk-delete` | 批量删除 |
+| DELETE | `/api/fences/:id` | 删除活动范围 |
+
+### 签到核心（/api，宽挂载）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/checkin` | 普通用户：签到 / 在途中 / 请假 |
+| GET | `/api/checkin/my` | 我的签到记录 |
+| POST | `/api/checkin/makeup` | 补签申请：活动结束后缺勤，普通学生发起申诉 |
+| GET | `/api/checkin/makeup/my` | 我的补签申请 |
+| GET | `/api/checkin/leave/my` | 我的请假申诉（可与补签一起构成「我的申诉」列表） |
+
+### 日历 / 排程（/api/calendar）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/calendar/class` | 班级集体日历 |
+| GET | `/api/calendar/my` | — |
+| GET | `/api/calendar/person/:userId` | — |
+| GET | `/api/calendar/report/:userId` | 个人分析报告 |
+
+### 实时数据流 / 审计（/api/stream）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/stream/` | 数据流按角色分级： |
+| GET | `/api/stream/stats` | 统计审计：仅管理员与运维者可见 |
+| DELETE | `/api/stream/:id` | 删除单条数据流记录：仅运维者可操作（管理员不可删除） |
+| DELETE | `/api/stream/` | 批量删除数据流记录：仅运维者可操作 |
+
+### 权限判定 / 委托（/api/permissions）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/permissions/codes` | 权限码表（前端门禁 UI 用） |
+| GET | `/api/permissions/mine` | 我的权限 |
+| GET | `/api/permissions/grants` | 指定账号的有效下放权限（仅运维者，用于「管理权力」页） |
+| GET | `/api/permissions/granted` | 我授予出去的权限（可撤回） |
+| POST | `/api/permissions/grant` | 下放权限（AUTH_GRANT）： |
+| POST | `/api/permissions/grant-batch` | 批量下放权限：多个账号 × 多个权限码 |
+| POST | `/api/permissions/revoke` | 收回已下放的权限 |
+
+### 权限工单（/api/workorders）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/workorders/options` | 可申请权限 + 可选审批人 |
+| GET | `/api/workorders/mine` | 我提交的工单 |
+| GET | `/api/workorders/inbox` | 待我审批的工单 |
+| POST | `/api/workorders/` | 提交工单（kind: perm 权限申请 / info 信息修改·反馈） |
+| POST | `/api/workorders/:id/review` | 审批（同意 / 驳回） |
+
+### 职权范围（/api/scope）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/scope/` | 列出各管理号及其可管理账号（运维端「管理范围」编辑器） |
+| PUT | `/api/scope/:adminId` | 设置某管理号的管理范围 |
+| GET | `/api/scope/mine` | 当前登录者自己的管理范围（管理端用于知道自己能管谁） |
+
+### 申诉（/api/appeal）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/appeal/upload` | 上传申诉图片 |
+| POST | `/api/appeal/leave` | 提交请假申诉 |
+| POST | `/api/appeal/makeup` | 提交补签申诉 |
+| GET | `/api/appeal/my` | 我的申诉（请假 + 补签合并） |
+| GET | `/api/appeal/:type/:id` | 申诉详情（普通学生本人 / 可管理的上级） |
+| POST | `/api/appeal/:type/:id/message` | 申诉内沟通（普通学生与管理员互相回复） |
+| POST | `/api/appeal/:type/:id/appeal` | 普通学生对裁决结果提起申诉（复议）→ 才进入终审 |
+| GET | `/api/appeal/attachment/:id` | 附件读取（鉴权，不对外静态暴露） |
+
+### 通知（/api/notifications）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/notifications/pending` | 未读消息（前端轮询用）：同时返回未读数量，便于角标显示 |
+| GET | `/api/notifications/` | 全部消息（消息中心列表，分层展示，分页） |
+| POST | `/api/notifications/read` | 标记已读：body.ids 为空数组表示「全部已读」 |
+| DELETE | `/api/notifications/` | 删除消息：单条或批量（body.ids 为消息 id 数组） |
+
+### 数据流隐私 / 打码（/api/dataflow）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/dataflow/meta` | GET /meta - 数据流分类与动作类型元数据 |
+| GET | `/api/dataflow/highrisk-texts` | GET /highrisk-texts - 返回数据流相关高危操作的确认文字 |
+| GET | `/api/dataflow/:id` | GET /:id - 单条数据流记录详情 |
+| POST | `/api/dataflow/mask` | POST /mask - 切换数据流隐私打码开关（仅运维者） |
+
+### 问题反馈（/api/feedback）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/feedback/` | 提交反馈（工单 + 邮件两种渠道） |
+| POST | `/api/feedback/upload` | 上传反馈图片（任何已登录用户均可 |
+| GET | `/api/feedback/` | 反馈列表：运维者看全部，其余只看自己提交的 |
+| GET | `/api/feedback/:id/attachment/:aid` | 反馈图片读取（仅本人或运维者可见，不对外静态暴露） |
+| POST | `/api/feedback/:id/handle` | 运维者处理 / 回复 |
